@@ -1,0 +1,15 @@
+{
+  "name": "deepspace-workflows",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "web:dev" : "pnpm -C apps/web dev",
+    "admin:dev" : "pnpm -C apps/admin dev",
+    "gateway:dev" : "cd services/gateway && air"
+  },
+  "keywords": [],
+  "author": "LemonPanda",
+  "license": "ISC",
+  "packageManager": "pnpm@10.28.0"
+}

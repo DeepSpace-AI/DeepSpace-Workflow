@@ -1,0 +1,37 @@
+{
+  "name": "web",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@ai-sdk/gateway": "^3.0.32",
+    "@ai-sdk/openai": "^3.0.25",
+    "@ai-sdk/openai-compatible": "^2.0.26",
+    "@ai-sdk/vue": "^3.0.68",
+    "@nuxt/eslint": "1.13.0",
+    "@nuxt/fonts": "0.13.0",
+    "@nuxt/ui": "^4.4.0",
+    "@nuxtjs/mdc": "0.20.0",
+    "@primeuix/themes": "^2.0.3",
+    "@tiptap/extension-emoji": "^3.18.0",
+    "@tiptap/extension-text-align": "^3.18.0",
+    "@tiptap/pm": "^3.18.0",
+    "@tiptap/starter-kit": "^3.18.0",
+    "@tiptap/vue-3": "^3.18.0",
+    "@unocss/reset": "^66.6.0",
+    "ai": "^6.0.68",
+    "eslint": "^9.39.2",
+    "nuxt": "^4.3.0",
+    "tailwindcss": "^4.1.18",
+    "tiptap-extension-code-block-shiki": "^1.0.0",
+    "vue": "^3.5.27",
+    "vue-router": "^4.6.4",
+    "zod": "^4.3.6"
+  }
+}
