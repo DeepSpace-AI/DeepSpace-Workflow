@@ -1,6 +1,6 @@
 export default defineEventHandler(async (event) => {
   const { aiGateway } = useRuntimeConfig();
-  if (!aiGateway?.url || !aiGateway?.apiKey) {
+  if (!aiGateway?.url) {
     throw createError({ statusCode: 500, statusMessage: "Missing AI Gateway config" });
   }
 
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   return await $fetch(`${base}/api/knowledge-bases/${id}/documents/${docId}`, {
     method: "DELETE",
     headers: {
-      Authorization: `Bearer ${aiGateway.apiKey}`,
+      cookie: event.node.req.headers.cookie || "",
     },
   });
 });

@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"deepspace/internal/repo"
@@ -14,6 +15,10 @@ type Service struct {
 func New(repo *repo.ChatRepo) *Service {
 	return &Service{repo: repo}
 }
+
+var (
+	ErrInvalidTitle = errors.New("invalid title")
+)
 
 type ConversationItem struct {
 	ID        int64   `json:"id"`
@@ -131,4 +136,38 @@ func (s *Service) CreateMessage(ctx context.Context, orgID, conversationID int64
 		TraceID:        item.TraceID,
 		CreatedAt:      item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
+}
+
+func (s *Service) UpdateConversation(ctx context.Context, orgID, conversationID int64, title string) (*ConversationItem, error) {
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return nil, ErrInvalidTitle
+	}
+
+	item, err := s.repo.UpdateConversationTitle(ctx, orgID, conversationID, title)
+	if err != nil {
+		return nil, err
+	}
+	if item == nil {
+		return nil, nil
+	}
+
+	return &ConversationItem{
+		ID:        item.ID,
+		ProjectID: derefInt64(item.ProjectID),
+		Title:     item.Title,
+		CreatedAt: item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}, nil
+}
+
+func (s *Service) DeleteConversation(ctx context.Context, orgID, conversationID int64) (bool, error) {
+	return s.repo.DeleteConversation(ctx, orgID, conversationID)
+}
+
+func derefInt64(value *int64) int64 {
+	if value == nil {
+		return 0
+	}
+	return *value
 }

@@ -5,7 +5,6 @@ type State struct {
 	ResponseBody []byte
 	TraceID      string
 	OrgID        int64
-	APIKeyID     int64
 	Model        string
 	CostAmount   float64
 	RefID        string

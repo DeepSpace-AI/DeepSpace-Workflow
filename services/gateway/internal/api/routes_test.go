@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"deepspace/internal/config"
-	"deepspace/internal/service/apikey"
 	"deepspace/internal/service/auth"
 	"deepspace/internal/service/billing"
 	"deepspace/internal/service/chat"
 	"deepspace/internal/service/knowledge"
 	"deepspace/internal/service/project"
+	"deepspace/internal/service/projectdocument"
 	"deepspace/internal/service/usage"
+	"deepspace/internal/service/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,15 +31,15 @@ func TestSetupRoutes(t *testing.T) {
 	SetupRoutes(
 		r,
 		cfg,
-		(*apikey.Service)(nil),
 		(*billing.Service)(nil),
 		(*usage.Service)(nil),
 		(*project.Service)(nil),
 		(*chat.Service)(nil),
 		(*knowledge.Service)(nil),
+		(*projectdocument.Service)(nil),
 		(*auth.UserAuthService)(nil),
+		(*user.Service)(nil),
 		(*auth.JWTManager)(nil),
-		(*auth.APIKeyValidator)(nil),
 	)
 
 	// Test Health

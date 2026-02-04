@@ -86,3 +86,23 @@ func (r *ChatRepo) TouchConversation(ctx context.Context, conversationID int64) 
 		Where("id = ?", conversationID).
 		Updates(map[string]any{"updated_at": time.Now()}).Error
 }
+
+func (r *ChatRepo) UpdateConversationTitle(ctx context.Context, orgID, conversationID int64, title string) (*model.Conversation, error) {
+	if err := r.db.WithContext(ctx).
+		Model(&model.Conversation{}).
+		Where("id = ? AND org_id = ?", conversationID, orgID).
+		Updates(map[string]any{"title": title, "updated_at": time.Now()}).Error; err != nil {
+		return nil, err
+	}
+	return r.GetConversation(ctx, orgID, conversationID)
+}
+
+func (r *ChatRepo) DeleteConversation(ctx context.Context, orgID, conversationID int64) (bool, error) {
+	result := r.db.WithContext(ctx).
+		Where("id = ? AND org_id = ?", conversationID, orgID).
+		Delete(&model.Conversation{})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}

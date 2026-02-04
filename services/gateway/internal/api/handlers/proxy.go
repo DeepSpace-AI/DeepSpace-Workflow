@@ -61,11 +61,6 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ref_id is required for billing"})
 		return
 	}
-	if value, ok := c.Get("api_key_id"); ok {
-		if v, ok := value.(int64); ok {
-			state.APIKeyID = v
-		}
-	}
 	if value, ok := c.Get("trace_id"); ok {
 		if v, ok := value.(string); ok {
 			state.TraceID = v

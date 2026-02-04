@@ -31,14 +31,9 @@ func (s *UsageCapture) Run(ctx context.Context, state *pipeline.State) error {
 	}
 
 	if s.usage != nil {
-		var apiKeyID *int64
-		if state.APIKeyID > 0 {
-			apiKeyID = &state.APIKeyID
-		}
 		_ = s.usage.Record(ctx, usage.RecordInput{
 			OrgID:            state.OrgID,
 			ProjectID:        nil,
-			APIKeyID:         apiKeyID,
 			Model:            state.Model,
 			PromptTokens:     0,
 			CompletionTokens: 0,

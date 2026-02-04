@@ -7,12 +7,12 @@ import (
 	"deepspace/internal/api/middleware"
 	"deepspace/internal/config"
 	"deepspace/internal/integrations/newapi"
-	"deepspace/internal/service/apikey"
 	"deepspace/internal/service/auth"
 	"deepspace/internal/service/billing"
 	"deepspace/internal/service/chat"
 	"deepspace/internal/service/knowledge"
 	"deepspace/internal/service/project"
+	"deepspace/internal/service/projectdocument"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 
@@ -22,16 +22,15 @@ import (
 func SetupRoutes(
 	r *gin.Engine,
 	cfg *config.Config,
-	apiKeyService *apikey.Service,
 	billingService *billing.Service,
 	usageService *usage.Service,
 	projectService *project.Service,
 	chatService *chat.Service,
 	knowledgeService *knowledge.Service,
+	projectDocumentService *projectdocument.Service,
 	authService *auth.UserAuthService,
 	userService *user.Service,
 	jwtManager *auth.JWTManager,
-	apiKeyValidator *auth.APIKeyValidator,
 ) {
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -41,12 +40,12 @@ func SetupRoutes(
 	// NewAPI Integration
 	newAPIClient := newapi.NewClient(cfg.NewAPIBaseURL, cfg.NewAPIKey)
 
-	apiKeyHandler := handlers.NewAPIKeyHandler(apiKeyService)
 	billingHandler := handlers.NewBillingHandler(billingService)
 	proxyHandler := handlers.NewProxyHandler(billingService, usageService, newAPIClient)
 	projectHandler := handlers.NewProjectHandler(projectService, knowledgeService)
 	chatHandler := handlers.NewChatSessionHandler(chatService)
 	knowledgeHandler := handlers.NewKnowledgeHandler(knowledgeService)
+	projectDocumentHandler := handlers.NewProjectDocumentHandler(projectDocumentService)
 	authHandler := handlers.NewAuthHandler(authService, jwtManager)
 	userHandler := handlers.NewUserHandler(userService, authService)
 	api := r.Group("/api")
@@ -64,10 +63,17 @@ func SetupRoutes(
 		protected.GET("/projects/:id", projectHandler.Get)
 		protected.PATCH("/projects/:id", projectHandler.Update)
 		protected.DELETE("/projects/:id", projectHandler.Delete)
+		protected.GET("/projects/:id/documents", projectDocumentHandler.List)
+		protected.POST("/projects/:id/documents", projectDocumentHandler.Create)
+		protected.GET("/projects/:id/documents/:docId", projectDocumentHandler.Get)
+		protected.PATCH("/projects/:id/documents/:docId", projectDocumentHandler.Update)
+		protected.DELETE("/projects/:id/documents/:docId", projectDocumentHandler.Delete)
 		protected.GET("/projects/:id/conversations", chatHandler.ListConversations)
 		protected.POST("/projects/:id/conversations", chatHandler.CreateConversation)
 		protected.GET("/conversations/:conversationId/messages", chatHandler.ListMessages)
 		protected.POST("/conversations/:conversationId/messages", chatHandler.CreateMessage)
+		protected.PATCH("/conversations/:conversationId", chatHandler.UpdateConversation)
+		protected.DELETE("/conversations/:conversationId", chatHandler.DeleteConversation)
 
 		protected.GET("/knowledge-bases", knowledgeHandler.ListBases)
 		protected.POST("/knowledge-bases", knowledgeHandler.CreateBase)
@@ -78,12 +84,6 @@ func SetupRoutes(
 		protected.POST("/knowledge-bases/:id/documents", knowledgeHandler.CreateDocument)
 		protected.DELETE("/knowledge-bases/:id/documents/:docId", knowledgeHandler.DeleteDocument)
 		protected.GET("/knowledge-bases/:id/documents/:docId/download", knowledgeHandler.DownloadDocument)
-
-		protected.POST("/keys", apiKeyHandler.Create)
-		protected.GET("/keys", apiKeyHandler.List)
-		protected.POST("/keys/:id/disable", apiKeyHandler.Disable)
-		protected.PUT("/keys/:id/scopes", apiKeyHandler.UpdateScopes)
-		protected.DELETE("/keys/:id", apiKeyHandler.Delete)
 
 		protected.POST("/billing/hold", billingHandler.Hold)
 		protected.POST("/billing/capture", billingHandler.Capture)
@@ -99,7 +99,7 @@ func SetupRoutes(
 	// This covers /v1/chat/completions, /v1/models, etc.
 	v1 := r.Group("/v1")
 	{
-		v1.Use(middleware.APIKeyAuth(apiKeyValidator))
+		v1.Use(middleware.UserAuth(jwtManager))
 		// Use Any to match all methods (GET, POST, etc.)
 		// /*path will capture the rest of the path
 		v1.Any("/*path", proxyHandler.Handle)

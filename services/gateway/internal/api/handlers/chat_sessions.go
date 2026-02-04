@@ -142,3 +142,69 @@ func (h *ChatSessionHandler) CreateMessage(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, item)
 }
+
+type updateConversationRequest struct {
+	Title string `json:"title"`
+}
+
+func (h *ChatSessionHandler) UpdateConversation(c *gin.Context) {
+	orgID, ok := getOrgID(c)
+	if !ok {
+		respondInternal(c, "org_id missing")
+		return
+	}
+
+	conversationID, err := strconv.ParseInt(c.Param("conversationId"), 10, 64)
+	if err != nil || conversationID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation id"})
+		return
+	}
+
+	var req updateConversationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	item, err := h.svc.UpdateConversation(c.Request.Context(), orgID, conversationID, req.Title)
+	if err != nil {
+		if err == chat.ErrInvalidTitle {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid title"})
+			return
+		}
+		respondInternal(c, "failed to update conversation")
+		return
+	}
+	if item == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "conversation not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
+func (h *ChatSessionHandler) DeleteConversation(c *gin.Context) {
+	orgID, ok := getOrgID(c)
+	if !ok {
+		respondInternal(c, "org_id missing")
+		return
+	}
+
+	conversationID, err := strconv.ParseInt(c.Param("conversationId"), 10, 64)
+	if err != nil || conversationID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid conversation id"})
+		return
+	}
+
+	found, err := h.svc.DeleteConversation(c.Request.Context(), orgID, conversationID)
+	if err != nil {
+		respondInternal(c, "failed to delete conversation")
+		return
+	}
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "conversation not found"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

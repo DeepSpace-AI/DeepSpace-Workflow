@@ -61,16 +61,16 @@ type Project struct {
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }
 
-type APIKey struct {
-	ID         int64 `gorm:"primaryKey;autoIncrement"`
-	OrgID      int64 `gorm:"index:idx_api_keys_org_status,priority:1"`
-	Name       *string
-	KeyHash    string `gorm:"uniqueIndex:idx_api_keys_key_hash"`
-	KeyPrefix  string
-	Scopes     datatypes.JSON `gorm:"type:jsonb"`
-	Status     string         `gorm:"index:idx_api_keys_org_status,priority:2"`
-	CreatedAt  time.Time      `gorm:"autoCreateTime"`
-	LastUsedAt *time.Time     `gorm:"index:idx_api_keys_last_used"`
+type ProjectDocument struct {
+	ID        int64 `gorm:"primaryKey;autoIncrement"`
+	OrgID     int64 `gorm:"index:idx_project_documents_org_project_updated,priority:1"`
+	ProjectID int64 `gorm:"index:idx_project_documents_org_project_updated,priority:2"`
+	Title     string
+	Content   string         `gorm:"type:text"`
+	Tags      datatypes.JSON `gorm:"type:jsonb"`
+	Status    string         `gorm:"index"`
+	CreatedAt time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime;index:idx_project_documents_org_project_updated,priority:3"`
 }
 
 type Wallet struct {
@@ -92,9 +92,8 @@ type Transaction struct {
 
 type UsageRecord struct {
 	ID               int64  `gorm:"primaryKey;autoIncrement"`
-	OrgID            int64  `gorm:"index:idx_usage_records_org_created,priority:1;index:idx_usage_records_org_api_key,priority:1;index:idx_usage_records_org_project,priority:1"`
+	OrgID            int64  `gorm:"index:idx_usage_records_org_created,priority:1;index:idx_usage_records_org_project,priority:1"`
 	ProjectID        *int64 `gorm:"index:idx_usage_records_org_project,priority:2"`
-	APIKeyID         *int64 `gorm:"index:idx_usage_records_org_api_key,priority:2"`
 	Model            string
 	PromptTokens     int
 	CompletionTokens int
@@ -127,7 +126,6 @@ type AuditLog struct {
 	ID            int64  `gorm:"primaryKey;autoIncrement"`
 	OrgID         *int64 `gorm:"index:idx_audit_logs_org_created,priority:1"`
 	UserID        *int64
-	APIKeyID      *int64
 	TraceID       string `gorm:"index:idx_audit_logs_trace"`
 	Action        string
 	RequestPath   *string

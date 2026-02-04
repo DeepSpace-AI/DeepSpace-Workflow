@@ -5,13 +5,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const id = getRouterParam(event, "id");
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: "Missing knowledge base id" });
+  const docId = getRouterParam(event, "docId");
+  if (!id || !docId) {
+    throw createError({ statusCode: 400, statusMessage: "Missing project or document id" });
   }
 
   const body = await readBody(event);
   const base = aiGateway.url.endsWith("/") ? aiGateway.url.slice(0, -1) : aiGateway.url;
-  return await $fetch(`${base}/api/knowledge-bases/${id}`, {
+  return await $fetch(`${base}/api/projects/${id}/documents/${docId}`, {
     method: "PATCH",
     headers: {
       cookie: event.node.req.headers.cookie || "",

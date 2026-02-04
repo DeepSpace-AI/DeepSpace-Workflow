@@ -19,7 +19,6 @@ func New(repo *repo.UsageRepo) *Service {
 type RecordInput struct {
 	OrgID            int64
 	ProjectID        *int64
-	APIKeyID         *int64
 	Model            string
 	PromptTokens     int
 	CompletionTokens int
@@ -37,7 +36,6 @@ func (s *Service) Record(ctx context.Context, in RecordInput) error {
 	rec := model.UsageRecord{
 		OrgID:            in.OrgID,
 		ProjectID:        in.ProjectID,
-		APIKeyID:         in.APIKeyID,
 		Model:            modelName,
 		PromptTokens:     in.PromptTokens,
 		CompletionTokens: in.CompletionTokens,

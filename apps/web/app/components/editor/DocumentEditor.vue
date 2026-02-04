@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import type { EditorCustomHandlers, EditorToolbarItem, EditorSuggestionMenuItem, EditorMentionMenuItem, EditorEmojiMenuItem, DropdownMenuItem } from '@nuxt/ui'
+import type {
+  EditorCustomHandlers,
+  EditorToolbarItem,
+  EditorSuggestionMenuItem,
+  EditorMentionMenuItem,
+  EditorEmojiMenuItem,
+  DropdownMenuItem
+} from '@nuxt/ui'
 import type { Editor, JSONContent } from '@tiptap/vue-3'
 import { upperFirst } from 'scule'
 import { mapEditorItems } from '@nuxt/ui/utils/editor'
@@ -8,10 +15,17 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { CodeBlockShiki } from 'tiptap-extension-code-block-shiki'
 import { ImageUpload } from './EditorImageUploadExtension'
 import EditorLinkPopover from './EditorLinkPopover.vue'
+import { AiPreviewExtension, type AiPreviewPayload } from './EditorAiPreviewExtension'
 
 const editorRef = useTemplateRef('editorRef')
+const modelValue = defineModel<string>({ default: '' })
+const currentEditor = ref<Editor | null>(null)
 
-const value = ref(``)
+const emit = defineEmits<{
+    (e: 'ai', payload: { type: 'polish' | 'expand' | 'summary'; selection: string; fullText: string }): void
+    (e: 'ai-apply'): void
+    (e: 'ai-dismiss'): void
+}>()
 const customHandlers = {
     imageUpload: {
         canExecute: (editor: Editor) => editor.can().insertContent({ type: 'imageUpload' }),
@@ -21,6 +35,20 @@ const customHandlers = {
     },
 } satisfies EditorCustomHandlers
 
+const aiMenuItems: DropdownMenuItem[][] = [[{
+    label: '润色',
+    icon: 'i-lucide-sparkles',
+    onSelect: () => emitAiAction('polish')
+}, {
+    label: '扩写',
+    icon: 'i-lucide-wand-2',
+    onSelect: () => emitAiAction('expand')
+}, {
+    label: '摘要',
+    icon: 'i-lucide-file-text',
+    onSelect: () => emitAiAction('summary')
+}]]
+
 const fixedToolbarItems = [[{
     kind: 'undo',
     icon: 'i-lucide-undo',
@@ -29,6 +57,10 @@ const fixedToolbarItems = [[{
     kind: 'redo',
     icon: 'i-lucide-redo',
     tooltip: { text: 'Redo' }
+}], [{
+    slot: 'ai' as const,
+    icon: 'i-lucide-sparkles',
+    tooltip: { text: 'AI 助手' }
 }], [{
     icon: 'i-lucide-heading',
     tooltip: { text: 'Headings' },
@@ -456,10 +488,73 @@ const mentionItems: EditorMentionMenuItem[] = [{
 }]
 
 const emojiItems: EditorEmojiMenuItem[] = gitHubEmojis.filter(emoji => !emoji.name.startsWith('regional_indicator_'))
+const aiPreviewExtension = AiPreviewExtension.configure({
+    onApply: () => emit('ai-apply'),
+    onDiscard: () => emit('ai-dismiss'),
+})
+
+watchEffect(() => {
+    // @ts-ignore - UEditor instance exposes editor
+    currentEditor.value = editorRef.value?.editor ?? null
+})
+
+function getSelectedText(editor: Editor | null) {
+    if (!editor) return ''
+    const { from, to } = editor.state.selection
+    if (from === to) return ''
+    return editor.state.doc.textBetween(from, to, '\n')
+}
+
+function emitAiAction(type: 'polish' | 'expand' | 'summary') {
+    if (!currentEditor.value) return
+    const editor = currentEditor.value as Editor
+    const selection = getSelectedText(editor)
+    const fullText = editor.getText()
+    emit('ai', { type, selection, fullText })
+}
+
+defineExpose({
+    getSelectionRange: () => {
+        if (!currentEditor.value) return null
+        const { from, to } = currentEditor.value.state.selection
+        return { from, to }
+    },
+    replaceRange: (from: number, to: number, text: string) => {
+        if (!currentEditor.value) return
+        currentEditor.value.chain().focus().insertContentAt({ from, to }, text).run()
+    },
+    getSelectedText: () => getSelectedText(currentEditor.value as Editor),
+    getFullText: () => currentEditor.value?.getText() ?? '',
+    replaceSelection: (text: string) => {
+        if (!currentEditor.value) return
+        const { from, to } = currentEditor.value.state.selection
+        currentEditor.value.chain().focus().insertContentAt({ from, to }, text).run()
+    },
+    insertAtCursor: (text: string) => {
+        if (!currentEditor.value) return
+        currentEditor.value.chain().focus().insertContent(text).run()
+    },
+    setContent: (text: string) => {
+        if (!currentEditor.value) return
+        currentEditor.value.commands.setContent(text)
+    },
+    setAiPreview: (payload: AiPreviewPayload) => {
+        if (!currentEditor.value) return
+        currentEditor.value.commands.setAiPreview(payload)
+    },
+    updateAiPreview: (payload: Partial<AiPreviewPayload>) => {
+        if (!currentEditor.value) return
+        currentEditor.value.commands.updateAiPreview(payload)
+    },
+    clearAiPreview: () => {
+        if (!currentEditor.value) return
+        currentEditor.value.commands.clearAiPreview()
+    },
+})
 </script>
 
 <template>
-    <UEditor ref="editorRef" v-slot="{ editor, handlers }" v-model="value" content-type="markdown" :extensions="[
+    <UEditor ref="editorRef" v-slot="{ editor, handlers }" v-model="modelValue" content-type="markdown" :extensions="[
         Emoji,
         TextAlign.configure({ types: ['heading', 'paragraph'] }),
         ImageUpload,
@@ -470,11 +565,16 @@ const emojiItems: EditorEmojiMenuItem[] = gitHubEmojis.filter(emoji => !emoji.na
                 dark: 'material-theme-palenight'
             }
         }),
-        completionExtension
+        aiPreviewExtension
     ]" :handlers="customHandlers" placeholder="Write, type '/' for commands..." :ui="{ base: 'p-8 sm:px-16 py-13.5' }"
         class="w-full h-full flex flex-col">
         <UEditorToolbar :editor="editor" :items="fixedToolbarItems"
             class="border-b border-muted sticky top-0 inset-x-0 px-8 sm:px-16 py-2 z-50 bg-default overflow-x-auto">
+            <template #ai>
+                <UDropdownMenu :items="aiMenuItems" :content="{ align: 'start', side: 'bottom' }">
+                    <UButton icon="i-lucide-sparkles" color="neutral" variant="ghost" size="sm" label="AI" />
+                </UDropdownMenu>
+            </template>
             <template #link>
                 <EditorLinkPopover :editor="editor" auto-open />
             </template>
@@ -523,5 +623,82 @@ html.dark .tiptap .shiki,
 html.dark .tiptap .shiki span {
     color: var(--shiki-dark) !important;
     background-color: var(--ui-bg-muted) !important;
+}
+
+.ai-preview-widget {
+    display: block;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(248, 250, 252, 0.9);
+    color: #475569;
+    font-size: 12px;
+    line-height: 1.6;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+html.dark .ai-preview-widget {
+    border-color: rgba(71, 85, 105, 0.6);
+    background: rgba(15, 23, 42, 0.8);
+    color: #cbd5f5;
+}
+
+.ai-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ai-preview-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: #64748b;
+}
+
+html.dark .ai-preview-title {
+    color: #94a3b8;
+}
+
+.ai-preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ai-preview-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.ai-preview-btn-ghost {
+    background: rgba(148, 163, 184, 0.15);
+    color: #64748b;
+}
+
+html.dark .ai-preview-btn-ghost {
+    background: rgba(148, 163, 184, 0.2);
+    color: #cbd5f5;
+}
+
+.ai-preview-btn-primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+.ai-preview-body {
+    white-space: pre-wrap;
+    color: #6b7280;
+}
+
+html.dark .ai-preview-body {
+    color: #94a3b8;
 }
 </style>

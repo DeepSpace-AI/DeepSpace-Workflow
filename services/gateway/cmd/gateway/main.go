@@ -9,12 +9,12 @@ import (
 	"deepspace/internal/config"
 	"deepspace/internal/pkg/db"
 	"deepspace/internal/repo"
-	"deepspace/internal/service/apikey"
 	"deepspace/internal/service/auth"
 	"deepspace/internal/service/billing"
 	"deepspace/internal/service/chat"
 	"deepspace/internal/service/knowledge"
 	"deepspace/internal/service/project"
+	"deepspace/internal/service/projectdocument"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 
@@ -42,14 +42,14 @@ func main() {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	apiKeyRepo := repo.NewAPIKeyRepo(dbConn)
-	apiKeyValidator := auth.NewAPIKeyValidator(apiKeyRepo)
 	billingRepo := repo.NewBillingRepo(dbConn)
 	billingService := billing.New(dbConn, billingRepo)
 	usageRepo := repo.NewUsageRepo(dbConn)
 	usageService := usage.New(usageRepo)
 	projectRepo := repo.NewProjectRepo(dbConn)
 	projectService := project.New(projectRepo)
+	projectDocumentRepo := repo.NewProjectDocumentRepo(dbConn)
+	projectDocumentService := projectdocument.New(projectDocumentRepo)
 	chatRepo := repo.NewChatRepo(dbConn)
 	chatService := chat.New(chatRepo)
 	userRepo := repo.NewUserRepo(dbConn)
@@ -86,8 +86,7 @@ func main() {
 	r.Use(cors.Default())
 
 	// Setup Routes
-	apiKeyService := apikey.New(apiKeyRepo)
-	api.SetupRoutes(r, cfg, apiKeyService, billingService, usageService, projectService, chatService, knowledgeService, userAuthService, userService, jwtManager, apiKeyValidator)
+	api.SetupRoutes(r, cfg, billingService, usageService, projectService, chatService, knowledgeService, projectDocumentService, userAuthService, userService, jwtManager)
 
 	log.Printf("Gateway running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {

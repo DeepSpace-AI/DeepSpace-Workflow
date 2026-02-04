@@ -6,16 +6,14 @@ export default defineEventHandler(async (event) => {
 
   const id = getRouterParam(event, "id");
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: "Missing knowledge base id" });
+    throw createError({ statusCode: 400, statusMessage: "Missing conversation id" });
   }
 
-  const body = await readBody(event);
   const base = aiGateway.url.endsWith("/") ? aiGateway.url.slice(0, -1) : aiGateway.url;
-  return await $fetch(`${base}/api/knowledge-bases/${id}`, {
-    method: "PATCH",
+  return await $fetch(`${base}/api/conversations/${id}`, {
+    method: "DELETE",
     headers: {
       cookie: event.node.req.headers.cookie || "",
     },
-    body,
   });
 });

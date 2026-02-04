@@ -75,9 +75,8 @@ const systemPrompt = `
 `;
 
 export default defineLazyEventHandler(async () => {
-  const apiKey = useRuntimeConfig().aiGateway.apiKey;
   const apiUrl = useRuntimeConfig().aiGateway.url;
-  if (!apiKey) throw new Error("Missing AI Gateway API key");
+  if (!apiUrl) throw new Error("Missing AI Gateway URL");
 
   return defineEventHandler(async (event: any) => {
     let body;
@@ -109,8 +108,8 @@ export default defineLazyEventHandler(async () => {
       randomUUID();
 
     const extraHeaders: Record<string, string> = {
-      Authorization: `Bearer ${apiKey}`,
       "X-Trace-Id": refId,
+      cookie: event.node.req.headers.cookie || "",
     };
 
     if (hasAmount) {

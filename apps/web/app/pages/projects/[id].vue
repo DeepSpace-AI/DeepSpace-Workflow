@@ -1,225 +1,262 @@
 <script setup lang="ts">
-import { Chat } from '@ai-sdk/vue';
+import { useProjectWorkspaceStore } from '#imports'
 
 definePageMeta({
     layout: 'editor',
-});
+})
 
-type ConversationItem = {
+type DocumentItem = {
     id: number
-    title?: string | null
+    project_id: number
+    title: string
+    content: string
+    tags: string[]
+    status: string
     created_at?: string
     updated_at?: string
 }
 
-type MessageItem = {
-    id: number
-    conversation_id: number
-    role: string
-    content: string
-    created_at?: string
-}
+const route = useRoute()
+const projectId = String(route.params.id)
+const requestHeaders = useRequestHeaders(['cookie'])
+const store = useProjectWorkspaceStore()
 
-const route = useRoute();
-const projectId = String(route.params.id);
-const currentTab = ref('folder');
-const content = ref('');
-const input = ref('');
-const activeConversationId = ref<number | null>(null);
-const requestHeaders = useRequestHeaders(['cookie']);
+// 初始化store
+store.setProject(projectId)
+store.loadLocal()
 
+// 使用组合式函数
+const documents = useProjectDocuments(projectId)
+const conversations = useProjectConversations(projectId)
+const editorAi = useEditorAi()
+
+// 编辑器区域引用
+const editorAreaRef = ref<any>(null)
+
+// 将 editorRef 连接到 editorAi（更有效的双向绑定）
+watch(
+    () => editorAreaRef.value?.editorRef,
+    (ref) => {
+        if (ref) {
+            editorAi.editorRef.value = ref
+        }
+    },
+    { immediate: true, flush: 'post' }
+)
+
+// 直接暴露 editorRef 以便调试
+const getEditorRef = () => editorAreaRef.value?.editorRef
+
+// UI状态
+const docSearch = ref('')
+const showRenameDoc = ref(false)
+const renameDocId = ref<string | null>(null)
+const renameDocTitle = ref('')
+const editingDocTitle = ref(false)
+const docTitleDraft = ref('')
+const showTagsModal = ref(false)
+const editTagsDocId = ref<string | null>(null)
+const editTagsValue = ref('')
+const showRenameConversation = ref(false)
+const renameConversationTitle = ref('')
+
+// 加载项目数据
 const { data: projectData } = await useAsyncData('project', () =>
     $fetch(`/api/projects/${projectId}`, { headers: requestHeaders })
-);
+)
 
-const { data: conversationsData, refresh: refreshConversations } = await useAsyncData('conversations', () =>
-    $fetch<{ items: ConversationItem[] }>(`/api/projects/${projectId}/conversations`, { headers: requestHeaders })
-);
+// 文档列表
+const documentList = documents.getDocumentList(docSearch)
 
-const conversations = computed(() => conversationsData.value?.items ?? []);
+// 监听活动文档变化
+watch(documents.activeDocument, () => {
+    editingDocTitle.value = false
+    docTitleDraft.value = ''
+    editorAi.closeAiPreview()
+})
 
-const { data: messagesData, refresh: refreshMessages } = await useAsyncData('messages', () => {
-    if (!activeConversationId.value) return Promise.resolve({ items: [] });
-    return $fetch<{ items: MessageItem[] }>(`/api/conversations/${activeConversationId.value}/messages`, { headers: requestHeaders });
-}, { watch: [activeConversationId] });
+// 文档标题编辑
+function openRenameDocument(docId: string) {
+    const doc = store.documents[docId]
+    if (!doc) return
+    renameDocId.value = docId
+    renameDocTitle.value = doc.title
+    showRenameDoc.value = true
+}
 
-const chat = new Chat({
-    api: '/api/chat',
-    onError(error) {
-        console.error('Chat error:', error);
-    },
-    onFinish: async ({ message, isError, isDisconnect, isAbort }) => {
-        if (isError || isDisconnect || isAbort) return;
-        await persistAssistantMessage(message);
-        await refreshMessages();
-    },
-});
+function startInlineRename() {
+    if (!documents.activeDocument.value) return
+    docTitleDraft.value = documents.activeDocument.value.title || ''
+    editingDocTitle.value = true
+    nextTick(() => {
+        const el = document.getElementById('doc-title-input') as HTMLInputElement | null
+        el?.focus()
+        el?.select()
+    })
+}
 
-function ensureActiveConversation() {
-    if (!activeConversationId.value && conversations.value.length > 0) {
-        activeConversationId.value = conversations.value[0].id;
+async function submitInlineRename() {
+    if (!documents.activeDocument.value) return
+    const title = docTitleDraft.value.trim()
+    if (!title) {
+        editingDocTitle.value = false
+        return
     }
+    await documents.updateDocument(String(documents.activeDocument.value.id), { title })
+    editingDocTitle.value = false
 }
 
-watch(conversations, () => {
-    ensureActiveConversation();
-});
-
-onMounted(() => {
-    ensureActiveConversation();
-});
-
-const hydratedMessages = computed(() => {
-    const items = messagesData.value?.items ?? [];
-    return items.map((item) => ({
-        id: String(item.id),
-        role: item.role,
-        parts: [{ type: 'text', text: item.content }],
-    }));
-});
-
-watch(hydratedMessages, (items) => {
-    // Sync server messages into Chat UI
-    // @ts-ignore - ai-sdk Chat accepts direct assign in runtime
-    chat.messages = items;
-}, { immediate: true });
-
-const conversationTitle = computed(() => {
-    if (!activeConversationId.value) return '新对话';
-    const current = conversations.value.find((item) => item.id === activeConversationId.value);
-    return current?.title || '新对话';
-});
-
-async function onSubmit(e: any) {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text) return;
-
-    if (!activeConversationId.value) {
-        const created = await $fetch<ConversationItem>(`/api/projects/${projectId}/conversations`, {
-            method: 'POST',
-            body: { title: text.slice(0, 20) }
-        });
-        activeConversationId.value = created.id;
-        await refreshConversations();
-    }
-
-    const conversationId = activeConversationId.value as number;
-    await $fetch(`/api/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        body: { role: 'user', content: text }
-    });
-
-    chat.sendMessage({ text });
-    input.value = '';
-
-    await refreshMessages();
+async function submitRenameDocument() {
+    if (!renameDocId.value) return
+    const title = renameDocTitle.value.trim()
+    if (!title) return
+    await documents.updateDocument(renameDocId.value, { title })
+    showRenameDoc.value = false
 }
 
-async function createNewChat() {
-    const created = await $fetch<ConversationItem>(`/api/projects/${projectId}/conversations`, {
-        method: 'POST',
-        body: { title: '新对话' }
-    });
-    activeConversationId.value = created.id;
-    // Clear UI immediately to avoid showing previous conversation
-    // @ts-ignore - ai-sdk Chat accepts direct assign in runtime
-    chat.messages = [];
-    await refreshConversations();
-    await refreshMessages();
+// 标签编辑
+function openEditTags(docId: string) {
+    const doc = store.documents[docId]
+    if (!doc) return
+    editTagsDocId.value = docId
+    editTagsValue.value = (doc.tags || []).join(', ')
+    showTagsModal.value = true
 }
 
-async function persistAssistantMessage(message: any) {
-    if (!activeConversationId.value) return;
-    if (!message || message.role !== 'assistant') return;
+async function submitTags() {
+    if (!editTagsDocId.value) return
+    const tags = editTagsValue.value
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    await documents.updateDocument(editTagsDocId.value, { tags })
+    showTagsModal.value = false
+}
 
-    const parts = Array.isArray(message.parts) ? message.parts : [];
-    const text = parts
-        .filter((part: any) => part?.type === 'text' && typeof part.text === 'string')
-        .map((part: any) => part.text)
-        .join('');
+// 对话管理
+function openRenameConversation() {
+    if (!store.activeConversationId) return
+    const current = store.conversations.find((item) => item.id === store.activeConversationId)
+    renameConversationTitle.value = current?.title || '新对话'
+    showRenameConversation.value = true
+}
 
-    if (!text.trim()) return;
-
-    await $fetch(`/api/conversations/${activeConversationId.value}/messages`, {
-        method: 'POST',
-        body: { role: 'assistant', content: text }
-    });
+async function submitRenameConversation() {
+    if (!store.activeConversationId) return
+    const title = renameConversationTitle.value.trim()
+    if (!title) return
+    await conversations.updateConversation(store.activeConversationId, title)
+    showRenameConversation.value = false
 }
 </script>
-<template>
-    <div class="flex flex-row w-full h-full">
-        <!-- 左侧导航栏 -->
-        <div class="min-h-[calc(100vh-var(--ui-header-height))] flex">
-            <ProjectSider @select="currentTab = $event" />
-        </div>
-        <!-- 中间文本编辑区域 -->
-        <div class="flex-1 flex h-[calc(100vh-var(--ui-header-height))]">
-            <div class="p-2">
-                <div class="my-2 text-xs pb-2">资源管理</div>
-                <ProjectFolder v-if="currentTab === 'folder'" :project-id="projectId" />
-                <ProjectKnowledge v-if="currentTab === 'knowledges'" :project-id="projectId" />
-            </div>
-            <USeparator orientation="vertical" />
-            <EditorDocumentEditor v-model="content" placeholder="开始写作或输入/唤醒AI助手" :editable="true" />
-            <USeparator orientation="vertical" />
-        </div>
-        <!-- 右侧AI对话区域 -->
-        <div class="w-100 h-[calc(100vh-var(--ui-header-height))] flex flex-col bg-white dark:bg-gray-900">
-            <!-- AI Agent Header -->
-            <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-800 shrink-0">
-                <div class="flex items-center gap-2">
-                    <UAvatar icon="i-lucide-bot" size="sm" alt="AI Agent" class="bg-primary-50 dark:bg-primary-900/20 text-primary-500" />
-                <div class="flex flex-col">
-                    <span class="font-medium text-sm leading-none">AI Agent</span>
-                    <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-none mt-1">{{ conversationTitle }}</span>
-                </div>
-                </div>
-                <div class="flex items-center gap-1">
-                    <UTooltip text="新对话">
-                        <UButton icon="i-lucide-plus" color="neutral" variant="ghost" size="xs" @click="createNewChat" />
-                    </UTooltip>
-                    <UTooltip text="历史记录">
-                        <UButton icon="i-lucide-history" color="neutral" variant="ghost" size="xs" />
-                    </UTooltip>
-                    <UTooltip text="设置">
-                        <UButton icon="i-lucide-settings" color="neutral" variant="ghost" size="xs" />
-                    </UTooltip>
-                </div>
-            </div>
 
-            <div class="flex-1 overflow-y-auto p-4">
-                <UChatMessages :assistant="{
-                    side: 'left',
-                    variant: 'outline',
-                    avatar: {
-                        icon: 'i-lucide-bot'
-                    },
-                    actions: [
-                        {
-                            label: 'Copy to clipboard',
-                            icon: 'i-lucide-copy',
-                        }
-                    ]
-                }" :auto-scroll="{
-                    color: 'neutral',
-                    variant: 'outline'
-                }" :messages="chat.messages" :status="chat.status">
-                    <template #content="{ message }">
-                        <template v-for="(part, index) in message.parts" :key="`${message.id}-${part.type}-${index}`">
-                            <MDC v-if="part.type === 'text' && message.role === 'assistant'" :value="part.text"
-                                :cache-key="`${message.id}-${index}`" class="*:first:mt-0 *:last:mb-0" />
-                            <p v-else-if="part.type === 'text' && message.role === 'user'" class="whitespace-pre-wrap">
-                                {{ part.text }}</p>
-                        </template>
-                    </template>
-                </UChatMessages>
-            </div>
-            <div class="p-4 pt-2">
-                <UChatPrompt v-model="input" :error="chat.error" @submit="onSubmit">
-                    <UChatPromptSubmit :status="chat.status" @stop="chat.stop()" @reload="chat.regenerate()" />
-                </UChatPrompt>
-            </div>
+<template>
+    <div class="flex flex-row w-full h-[calc(100vh-var(--ui-header-height))]">
+        <!-- 左侧导航栏 -->
+        <div class="flex">
+            <ProjectSider />
         </div>
+
+        <!-- 中间编辑器区域 -->
+        <ProjectEditorArea
+            ref="editorAreaRef"
+            :project-id="projectId"
+            :documents="documentList"
+            :active-doc-id="store.activeDocId"
+            :document-title="documents.documentTitle.value"
+            :document-char-count="documents.documentCharCount.value"
+            :document-last-saved-at="documents.documentLastSavedAt.value"
+            v-model:content="documents.content.value"
+            v-model:search="docSearch"
+            :sync-status="documents.syncStatus.value"
+            @select-doc="documents.setActiveDoc"
+            @create-doc="documents.createDocument('新建文档')"
+            @rename-doc="openRenameDocument"
+            @edit-tags="openEditTags"
+            @delete-doc="documents.deleteDocument"
+            @rename-title="editingDocTitle ? submitInlineRename() : startInlineRename()"
+            @ai-action="editorAi.handleAiAction"
+            @ai-apply="editorAi.applyAiResult"
+            @ai-dismiss="editorAi.closeAiPreview"
+        />
+
+        <!-- 右侧AI对话区域 -->
+        <ProjectChat
+            :project-id="projectId"
+            :chat="conversations.chat"
+            :conversation-options="conversations.conversationOptions.value"
+            v-model:active-conversation-id="conversations.activeConversationId.value"
+            :conversation-title="conversations.conversationTitle.value"
+            @submit="conversations.sendMessage"
+            @create="conversations.createConversation()"
+            @rename="openRenameConversation"
+            @delete="conversations.deleteConversation(store.activeConversationId!)"
+        />
+
+        <!-- 重命名文档弹窗 -->
+        <UModal v-model:open="showRenameDoc">
+            <template #content>
+                <UCard>
+                    <template #header>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white">重命名文档</h3>
+                            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" @click="showRenameDoc = false" />
+                        </div>
+                    </template>
+                    <UInput v-model="renameDocTitle" size="lg" placeholder="输入文档标题" />
+                    <template #footer>
+                        <div class="flex items-center justify-end gap-2">
+                            <UButton color="neutral" variant="ghost" @click="showRenameDoc = false">取消</UButton>
+                            <UButton color="primary" @click="submitRenameDocument">保存</UButton>
+                        </div>
+                    </template>
+                </UCard>
+            </template>
+        </UModal>
+
+        <!-- 重命名对话弹窗 -->
+        <UModal v-model:open="showRenameConversation">
+            <template #content>
+                <UCard>
+                    <template #header>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white">重命名对话</h3>
+                            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" @click="showRenameConversation = false" />
+                        </div>
+                    </template>
+                    <UInput v-model="renameConversationTitle" size="lg" placeholder="输入对话标题" />
+                    <template #footer>
+                        <div class="flex items-center justify-end gap-2">
+                            <UButton color="neutral" variant="ghost" @click="showRenameConversation = false">取消</UButton>
+                            <UButton color="primary" @click="submitRenameConversation">保存</UButton>
+                        </div>
+                    </template>
+                </UCard>
+            </template>
+        </UModal>
+
+        <!-- 编辑标签弹窗 -->
+        <UModal v-model:open="showTagsModal">
+            <template #content>
+                <UCard>
+                    <template #header>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white">编辑标签</h3>
+                            <UButton icon="i-lucide-x" color="neutral" variant="ghost" size="xs" @click="showTagsModal = false" />
+                        </div>
+                    </template>
+                    <div class="space-y-2">
+                        <p class="text-xs text-slate-500 dark:text-slate-400">使用英文逗号分隔标签</p>
+                        <UInput v-model="editTagsValue" size="lg" placeholder="如：方法, 数据集, 摘要" />
+                    </div>
+                    <template #footer>
+                        <div class="flex items-center justify-end gap-2">
+                            <UButton color="neutral" variant="ghost" @click="showTagsModal = false">取消</UButton>
+                            <UButton color="primary" @click="submitTags">保存</UButton>
+                        </div>
+                    </template>
+                </UCard>
+            </template>
+        </UModal>
     </div>
 </template>
