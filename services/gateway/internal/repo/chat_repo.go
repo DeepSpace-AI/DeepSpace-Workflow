@@ -29,10 +29,33 @@ func (r *ChatRepo) ListConversations(ctx context.Context, orgID, projectID int64
 	return conversations, nil
 }
 
+func (r *ChatRepo) ListStandaloneConversations(ctx context.Context, orgID int64) ([]model.Conversation, error) {
+	var conversations []model.Conversation
+	if err := r.db.WithContext(ctx).
+		Where("org_id = ? AND project_id IS NULL", orgID).
+		Order("updated_at DESC").
+		Find(&conversations).Error; err != nil {
+		return nil, err
+	}
+	return conversations, nil
+}
+
 func (r *ChatRepo) CreateConversation(ctx context.Context, orgID, projectID int64, title *string) (*model.Conversation, error) {
 	conv := model.Conversation{
 		OrgID:     orgID,
 		ProjectID: &projectID,
+		Title:     title,
+	}
+	if err := r.db.WithContext(ctx).Create(&conv).Error; err != nil {
+		return nil, err
+	}
+	return &conv, nil
+}
+
+func (r *ChatRepo) CreateStandaloneConversation(ctx context.Context, orgID int64, title *string) (*model.Conversation, error) {
+	conv := model.Conversation{
+		OrgID:     orgID,
+		ProjectID: nil,
 		Title:     title,
 	}
 	if err := r.db.WithContext(ctx).Create(&conv).Error; err != nil {

@@ -3,6 +3,7 @@ package usage
 import (
 	"context"
 	"strings"
+	"time"
 
 	"deepspace/internal/model"
 	"deepspace/internal/repo"
@@ -14,6 +15,14 @@ type Service struct {
 
 func New(repo *repo.UsageRepo) *Service {
 	return &Service{repo: repo}
+}
+
+type ListInput struct {
+	OrgID    int64
+	Start    *time.Time
+	End      *time.Time
+	Page     int
+	PageSize int
 }
 
 type RecordInput struct {
@@ -45,4 +54,40 @@ func (s *Service) Record(ctx context.Context, in RecordInput) error {
 	}
 
 	return s.repo.Create(ctx, rec)
+}
+
+func (s *Service) List(ctx context.Context, in ListInput) ([]model.UsageRecord, int64, error) {
+	page := in.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := in.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	records, err := s.repo.List(ctx, repo.UsageListFilter{
+		OrgID:  in.OrgID,
+		Start:  in.Start,
+		End:    in.End,
+		Limit:  pageSize,
+		Offset: (page - 1) * pageSize,
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := s.repo.Count(ctx, in.OrgID, in.Start, in.End)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return records, total, nil
+}
+
+func (s *Service) SumCost(ctx context.Context, orgID int64, start, end *time.Time) (float64, error) {
+	return s.repo.SumCost(ctx, orgID, start, end)
 }

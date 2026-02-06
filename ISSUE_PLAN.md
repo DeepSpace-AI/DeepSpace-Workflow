@@ -50,6 +50,14 @@
 - 目标：展示钱包余额与 usage
 - 交付：Wallet / Usage 页面
 - 依赖：DS-006
+ - 细化：
+   - 路由：`/billing/wallet`（余额概览）、`/billing/usage`（usage 列表）
+   - 钱包卡片：可用余额 / 冻结金额 / 近 24h usage 汇总
+   - Usage 列表：时间、模型、请求量、token、费用、trace_id
+   - 交互：分页 / 时间范围筛选（今日/近 7 天/近 30 天）
+   - 状态：加载态 / 空状态 / 错误态（统一错误格式）
+   - 数据源：仅调用 Gateway（统一 API Client）
+   - 验收：与 DS-006 钱包/usage 数据一致，可用 trace_id 跳转到详情（若有）
 
 ---
 
@@ -123,4 +131,3 @@
 - 目标：CSV/JSON/Markdown 导出
 - 交付：Worker 任务
 - 依赖：DS-017
-

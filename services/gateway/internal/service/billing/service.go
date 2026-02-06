@@ -37,6 +37,17 @@ type CaptureResult = HoldResult
 
 type ReleaseResult = HoldResult
 
+func (s *Service) GetWallet(ctx context.Context, orgID int64) (*model.Wallet, error) {
+	wallet, err := s.repo.GetWallet(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+	if wallet != nil {
+		return wallet, nil
+	}
+	return s.repo.CreateWallet(ctx, orgID)
+}
+
 func (s *Service) Hold(ctx context.Context, orgID int64, amount float64, refID string, metadata map[string]any) (*HoldResult, error) {
 	if amount <= 0 {
 		return nil, ErrInvalidAmount

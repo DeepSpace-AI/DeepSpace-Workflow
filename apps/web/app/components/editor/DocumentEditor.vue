@@ -25,6 +25,7 @@ const emit = defineEmits<{
     (e: 'ai', payload: { type: 'polish' | 'expand' | 'summary'; selection: string; fullText: string }): void
     (e: 'ai-apply'): void
     (e: 'ai-dismiss'): void
+    (e: 'selection-change', hasSelection: boolean): void
 }>()
 const customHandlers = {
     imageUpload: {
@@ -71,22 +72,22 @@ const fixedToolbarItems = [[{
         kind: 'heading',
         level: 1,
         icon: 'i-lucide-heading-1',
-        label: 'Heading 1'
+        label: '标题 1'
     }, {
         kind: 'heading',
         level: 2,
         icon: 'i-lucide-heading-2',
-        label: 'Heading 2'
+        label: '标题 2'
     }, {
         kind: 'heading',
         level: 3,
         icon: 'i-lucide-heading-3',
-        label: 'Heading 3'
+        label: '标题 3'
     }, {
         kind: 'heading',
         level: 4,
         icon: 'i-lucide-heading-4',
-        label: 'Heading 4'
+        label: '标题 4'
     }]
 }, {
     icon: 'i-lucide-list',
@@ -97,11 +98,11 @@ const fixedToolbarItems = [[{
     items: [{
         kind: 'bulletList',
         icon: 'i-lucide-list',
-        label: 'Bullet List'
+        label: '无序列表'
     }, {
         kind: 'orderedList',
         icon: 'i-lucide-list-ordered',
-        label: 'Ordered List'
+        label: '有序列表'
     }]
 }, {
     kind: 'blockquote',
@@ -153,32 +154,32 @@ const fixedToolbarItems = [[{
         kind: 'textAlign',
         align: 'left',
         icon: 'i-lucide-align-left',
-        label: 'Align Left'
+        label: '左对齐'
     }, {
         kind: 'textAlign',
         align: 'center',
         icon: 'i-lucide-align-center',
-        label: 'Align Center'
+        label: '居中对齐'
     }, {
         kind: 'textAlign',
         align: 'right',
         icon: 'i-lucide-align-right',
-        label: 'Align Right'
+        label: '右对齐'
     }, {
         kind: 'textAlign',
         align: 'justify',
         icon: 'i-lucide-align-justify',
-        label: 'Align Justify'
+        label: '两端对齐'
     }]
 }]] satisfies EditorToolbarItem<typeof customHandlers>[][]
 
 const bubbleToolbarItems = computed(() => [
     [{
-        label: 'Turn into',
+        label: '转换为',
         trailingIcon: 'i-lucide-chevron-down',
         activeColor: 'neutral',
         activeVariant: 'ghost',
-        tooltip: { text: 'Turn into' },
+        tooltip: { text: '转换为' },
         content: {
             align: 'start'
         },
@@ -187,83 +188,102 @@ const bubbleToolbarItems = computed(() => [
         },
         items: [{
             type: 'label',
-            label: 'Turn into'
+            label: '转换为'
         }, {
             kind: 'paragraph',
-            label: 'Paragraph',
+            label: '段落',
             icon: 'i-lucide-type'
         }, {
             kind: 'heading',
             level: 1,
             icon: 'i-lucide-heading-1',
-            label: 'Heading 1'
+            label: '标题 1'
         }, {
             kind: 'heading',
             level: 2,
             icon: 'i-lucide-heading-2',
-            label: 'Heading 2'
+            label: '标题 2'
         }, {
             kind: 'heading',
             level: 3,
             icon: 'i-lucide-heading-3',
-            label: 'Heading 3'
+            label: '标题 3'
         }, {
             kind: 'heading',
             level: 4,
             icon: 'i-lucide-heading-4',
-            label: 'Heading 4'
+            label: '标题 4'
         }, {
             kind: 'bulletList',
             icon: 'i-lucide-list',
-            label: 'Bullet List'
+            label: '无序列表'
         }, {
             kind: 'orderedList',
             icon: 'i-lucide-list-ordered',
-            label: 'Ordered List'
+            label: '有序列表'
         }, {
             kind: 'blockquote',
             icon: 'i-lucide-text-quote',
-            label: 'Blockquote'
+            label: '引用'
         }, {
             kind: 'codeBlock',
             icon: 'i-lucide-square-code',
-            label: 'Code Block'
+            label: '代码块'
+        }]
+    }], [{
+        icon: 'i-lucide-sparkles',
+        tooltip: { text: 'AI 编辑' },
+        content: {
+            align: 'end'
+        },
+        items: [{
+            label: '润色',
+            icon: 'i-lucide-sparkles',
+            onSelect: () => emitAiAction('polish')
+        }, {
+            label: '扩写',
+            icon: 'i-lucide-wand-2',
+            onSelect: () => emitAiAction('expand')
+        }, {
+            label: '摘要',
+            icon: 'i-lucide-file-text',
+            onSelect: () => emitAiAction('summary')
         }]
     }], [{
         kind: 'mark',
         mark: 'bold',
         icon: 'i-lucide-bold',
-        tooltip: { text: 'Bold' }
+        tooltip: { text: '加粗' }
     }, {
         kind: 'mark',
         mark: 'italic',
         icon: 'i-lucide-italic',
-        tooltip: { text: 'Italic' }
+        tooltip: { text: '斜体' }
     }, {
         kind: 'mark',
         mark: 'underline',
         icon: 'i-lucide-underline',
-        tooltip: { text: 'Underline' }
+        tooltip: { text: '下划线' }
     }, {
         kind: 'mark',
         mark: 'strike',
         icon: 'i-lucide-strikethrough',
-        tooltip: { text: 'Strikethrough' }
+        tooltip: { text: '删除线' }
     }, {
         kind: 'mark',
         mark: 'code',
         icon: 'i-lucide-code',
-        tooltip: { text: 'Code' }
+        tooltip: { text: '代码' }
     }], [{
         slot: 'link' as const,
         icon: 'i-lucide-link'
     }, {
         kind: 'imageUpload',
         icon: 'i-lucide-image',
-        tooltip: { text: 'Image' }
+        tooltip: { text: '插入图片' }
     }], [{
         icon: 'i-lucide-align-justify',
-        tooltip: { text: 'Text Align' },
+        tooltip: { text: '文本对齐' },
         content: {
             align: 'end'
         },
@@ -271,22 +291,22 @@ const bubbleToolbarItems = computed(() => [
             kind: 'textAlign',
             align: 'left',
             icon: 'i-lucide-align-left',
-            label: 'Align Left'
+            label: '左对齐'
         }, {
             kind: 'textAlign',
             align: 'center',
             icon: 'i-lucide-align-center',
-            label: 'Align Center'
+            label: '居中对齐'
         }, {
             kind: 'textAlign',
             align: 'right',
             icon: 'i-lucide-align-right',
-            label: 'Align Right'
+            label: '右对齐'
         }, {
             kind: 'textAlign',
             align: 'justify',
             icon: 'i-lucide-align-justify',
-            label: 'Align Justify'
+            label: '两端对齐'
         }]
     }]] satisfies EditorToolbarItem<typeof customHandlers>[][])
 
@@ -297,10 +317,10 @@ const imageToolbarItems = (editor: Editor): EditorToolbarItem[][] => {
         icon: 'i-lucide-download',
         to: node?.attrs?.src,
         download: true,
-        tooltip: { text: 'Download' }
+        tooltip: { text: '下载' }
     }, {
         icon: 'i-lucide-refresh-cw',
-        tooltip: { text: 'Replace' },
+        tooltip: { text: '替换' },
         onClick: () => {
             const { state } = editor
             const { selection } = state
@@ -314,7 +334,7 @@ const imageToolbarItems = (editor: Editor): EditorToolbarItem[][] => {
         }
     }], [{
         icon: 'i-lucide-trash',
-        tooltip: { text: 'Delete' },
+        tooltip: { text: '删除' },
         onClick: () => {
             const { state } = editor
             const { selection } = state
@@ -491,11 +511,37 @@ const emojiItems: EditorEmojiMenuItem[] = gitHubEmojis.filter(emoji => !emoji.na
 const aiPreviewExtension = AiPreviewExtension.configure({
     onApply: () => emit('ai-apply'),
     onDiscard: () => emit('ai-dismiss'),
+    onStop: () => {
+        // 停止 AI 生成
+        emit('ai-dismiss')
+    },
 })
+
+const editorEventTarget = ref<Editor | null>(null)
+const handleSelectionUpdate = () => {
+    const editor = editorEventTarget.value
+    if (!editor) return
+    const selection = editor.state.selection
+    emit('selection-change', Boolean(selection && !selection.empty))
+}
 
 watchEffect(() => {
     // @ts-ignore - UEditor instance exposes editor
     currentEditor.value = editorRef.value?.editor ?? null
+    if (currentEditor.value && editorEventTarget.value !== currentEditor.value) {
+        if (editorEventTarget.value) {
+            editorEventTarget.value.off('selectionUpdate', handleSelectionUpdate)
+        }
+        editorEventTarget.value = currentEditor.value
+        editorEventTarget.value.on('selectionUpdate', handleSelectionUpdate)
+        handleSelectionUpdate()
+    }
+})
+
+onBeforeUnmount(() => {
+    if (editorEventTarget.value) {
+        editorEventTarget.value.off('selectionUpdate', handleSelectionUpdate)
+    }
 })
 
 function getSelectedText(editor: Editor | null) {
@@ -658,10 +704,34 @@ html.dark .ai-preview-widget {
     text-transform: none;
     letter-spacing: 0.02em;
     color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 html.dark .ai-preview-title {
     color: #94a3b8;
+}
+
+/* Loading spinner using pure CSS */
+.ai-preview-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(100, 116, 139, 0.2);
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+html.dark .ai-preview-spinner {
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .ai-preview-actions {
@@ -691,14 +761,55 @@ html.dark .ai-preview-btn-ghost {
 .ai-preview-btn-primary {
     background: #2563eb;
     color: #fff;
+    transition: all 0.2s;
+}
+
+.ai-preview-btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.ai-preview-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 终止按钮样式 */
+.ai-preview-btn-stop {
+    background: #dc2626 !important;
+}
+
+.ai-preview-btn-stop:hover {
+    background: #b91c1c !important;
 }
 
 .ai-preview-body {
     white-space: pre-wrap;
     color: #6b7280;
+    min-height: 20px;
+    transition: opacity 0.2s;
+    word-break: break-word;
 }
 
 html.dark .ai-preview-body {
     color: #94a3b8;
+}
+
+.ai-preview-loading {
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* 流式更新时的脉冲效果 */
+.ai-preview-body.streaming {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.9;
+    }
 }
 </style>

@@ -15,6 +15,8 @@ import (
 	"deepspace/internal/service/knowledge"
 	"deepspace/internal/service/project"
 	"deepspace/internal/service/projectdocument"
+	"deepspace/internal/service/projectskill"
+	"deepspace/internal/service/projectworkflow"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 
@@ -50,6 +52,10 @@ func main() {
 	projectService := project.New(projectRepo)
 	projectDocumentRepo := repo.NewProjectDocumentRepo(dbConn)
 	projectDocumentService := projectdocument.New(projectDocumentRepo)
+	projectSkillRepo := repo.NewProjectSkillRepo(dbConn)
+	projectSkillService := projectskill.New(projectSkillRepo)
+	projectWorkflowRepo := repo.NewProjectWorkflowRepo(dbConn)
+	projectWorkflowService := projectworkflow.New(projectWorkflowRepo)
 	chatRepo := repo.NewChatRepo(dbConn)
 	chatService := chat.New(chatRepo)
 	userRepo := repo.NewUserRepo(dbConn)
@@ -86,7 +92,7 @@ func main() {
 	r.Use(cors.Default())
 
 	// Setup Routes
-	api.SetupRoutes(r, cfg, billingService, usageService, projectService, chatService, knowledgeService, projectDocumentService, userAuthService, userService, jwtManager)
+	api.SetupRoutes(r, cfg, billingService, usageService, projectService, chatService, knowledgeService, projectDocumentService, projectSkillService, projectWorkflowService, userAuthService, userService, jwtManager)
 
 	log.Printf("Gateway running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {

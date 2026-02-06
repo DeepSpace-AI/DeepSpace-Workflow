@@ -3,7 +3,7 @@ import type { ProjectDocumentState } from '~/app/stores/projectWorkspace'
 
 const props = defineProps<{
   projectId: string
-  documents: ProjectDocumentState[]
+  documents?: ProjectDocumentState[]
   activeDocId: string | null
   search: string
   syncStatus?: {
@@ -23,6 +23,7 @@ const emit = defineEmits<{
 }>()
 
 const section = ref<'documents' | 'knowledge'>('documents')
+const safeDocuments = computed(() => props.documents ?? [])
 
 const searchModel = computed({
   get: () => props.search,
@@ -79,7 +80,7 @@ function formatTime(value?: string) {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">项目文档</p>
-            <p class="text-[11px] text-slate-400">共 {{ documents.length }} 篇</p>
+            <p class="text-[11px] text-slate-400">共 {{ safeDocuments.length }} 篇</p>
           </div>
           <UButton icon="i-lucide-plus" size="xs" color="primary" @click="emit('create-doc')" />
         </div>
@@ -89,7 +90,7 @@ function formatTime(value?: string) {
 
     <div class="flex-1 overflow-y-auto p-2 space-y-1" v-if="section === 'documents'">
       <button
-        v-for="doc in documents"
+        v-for="doc in safeDocuments"
         :key="doc.id"
         @click="emit('select-doc', String(doc.id))"
         class="w-full text-left rounded-lg px-3 py-2 transition"

@@ -39,6 +39,7 @@ interface Emits {
     (e: 'ai-action', payload: { type: 'polish' | 'expand' | 'summary'; selection: string; fullText: string }): void
     (e: 'ai-apply'): void
     (e: 'ai-dismiss'): void
+    (e: 'selection-change', hasSelection: boolean): void
 }
 
 const props = defineProps<Props>()
@@ -106,6 +107,7 @@ const localSearch = computed({
                 @ai="emit('ai-action', $event)"
                 @ai-apply="emit('ai-apply')"
                 @ai-dismiss="emit('ai-dismiss')"
+                @selection-change="emit('selection-change', $event)"
                 class="flex-1"
             />
         </div>

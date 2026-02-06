@@ -12,6 +12,8 @@ import (
 	"deepspace/internal/service/knowledge"
 	"deepspace/internal/service/project"
 	"deepspace/internal/service/projectdocument"
+	"deepspace/internal/service/projectskill"
+	"deepspace/internal/service/projectworkflow"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 
@@ -37,6 +39,8 @@ func TestSetupRoutes(t *testing.T) {
 		(*chat.Service)(nil),
 		(*knowledge.Service)(nil),
 		(*projectdocument.Service)(nil),
+		(*projectskill.Service)(nil),
+		(*projectworkflow.Service)(nil),
 		(*auth.UserAuthService)(nil),
 		(*user.Service)(nil),
 		(*auth.JWTManager)(nil),

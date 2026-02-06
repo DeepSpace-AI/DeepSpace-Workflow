@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui';
-
+import { zh_cn as uiLocale } from '@nuxt/ui/locale';
 const route = useRoute();
 
 const items = computed<NavigationMenuItem[]>(() => [
+    {
+        label: '对话',
+        to: '/chat',
+        active: route.path.startsWith('/chat'),
+    },
     {
         label: '项目',
         to: '/projects',
@@ -18,7 +23,12 @@ const items = computed<NavigationMenuItem[]>(() => [
         label: '知识库',
         to: '/knowledge',
         active: route.path.startsWith('/knowledge'),
-    }
+    },
+    {
+        label: '计费',
+        to: '/billing/wallet',
+        active: route.path.startsWith('/billing'),
+    },
 ]);
 
 const dropdownItems = computed<DropdownMenuItem[]>(() => [
@@ -41,7 +51,7 @@ const dropdownItems = computed<DropdownMenuItem[]>(() => [
 
 </script>
 <template>
-    <UApp>
+    <UApp :locale="uiLocale">
         <UHeader>
             <template #title>
                 <NuxtLink to="/">DeepSpace Workflows</NuxtLink>

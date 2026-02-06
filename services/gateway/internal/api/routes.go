@@ -13,6 +13,8 @@ import (
 	"deepspace/internal/service/knowledge"
 	"deepspace/internal/service/project"
 	"deepspace/internal/service/projectdocument"
+	"deepspace/internal/service/projectskill"
+	"deepspace/internal/service/projectworkflow"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 
@@ -28,6 +30,8 @@ func SetupRoutes(
 	chatService *chat.Service,
 	knowledgeService *knowledge.Service,
 	projectDocumentService *projectdocument.Service,
+	projectSkillService *projectskill.Service,
+	projectWorkflowService *projectworkflow.Service,
 	authService *auth.UserAuthService,
 	userService *user.Service,
 	jwtManager *auth.JWTManager,
@@ -41,11 +45,14 @@ func SetupRoutes(
 	newAPIClient := newapi.NewClient(cfg.NewAPIBaseURL, cfg.NewAPIKey)
 
 	billingHandler := handlers.NewBillingHandler(billingService)
+	billingViewHandler := handlers.NewBillingViewHandler(billingService, usageService)
 	proxyHandler := handlers.NewProxyHandler(billingService, usageService, newAPIClient)
 	projectHandler := handlers.NewProjectHandler(projectService, knowledgeService)
 	chatHandler := handlers.NewChatSessionHandler(chatService)
 	knowledgeHandler := handlers.NewKnowledgeHandler(knowledgeService)
 	projectDocumentHandler := handlers.NewProjectDocumentHandler(projectDocumentService)
+	projectSkillHandler := handlers.NewProjectSkillHandler(projectSkillService)
+	projectWorkflowHandler := handlers.NewProjectWorkflowHandler(projectWorkflowService)
 	authHandler := handlers.NewAuthHandler(authService, jwtManager)
 	userHandler := handlers.NewUserHandler(userService, authService)
 	api := r.Group("/api")
@@ -68,8 +75,18 @@ func SetupRoutes(
 		protected.GET("/projects/:id/documents/:docId", projectDocumentHandler.Get)
 		protected.PATCH("/projects/:id/documents/:docId", projectDocumentHandler.Update)
 		protected.DELETE("/projects/:id/documents/:docId", projectDocumentHandler.Delete)
+		protected.GET("/projects/:id/skills", projectSkillHandler.List)
+		protected.POST("/projects/:id/skills", projectSkillHandler.Create)
+		protected.PATCH("/projects/:id/skills/:skillId", projectSkillHandler.Update)
+		protected.DELETE("/projects/:id/skills/:skillId", projectSkillHandler.Delete)
+		protected.GET("/projects/:id/workflows", projectWorkflowHandler.List)
+		protected.POST("/projects/:id/workflows", projectWorkflowHandler.Create)
+		protected.PATCH("/projects/:id/workflows/:workflowId", projectWorkflowHandler.Update)
+		protected.DELETE("/projects/:id/workflows/:workflowId", projectWorkflowHandler.Delete)
 		protected.GET("/projects/:id/conversations", chatHandler.ListConversations)
 		protected.POST("/projects/:id/conversations", chatHandler.CreateConversation)
+		protected.GET("/conversations", chatHandler.ListStandaloneConversations)
+		protected.POST("/conversations", chatHandler.CreateStandaloneConversation)
 		protected.GET("/conversations/:conversationId/messages", chatHandler.ListMessages)
 		protected.POST("/conversations/:conversationId/messages", chatHandler.CreateMessage)
 		protected.PATCH("/conversations/:conversationId", chatHandler.UpdateConversation)
@@ -88,6 +105,8 @@ func SetupRoutes(
 		protected.POST("/billing/hold", billingHandler.Hold)
 		protected.POST("/billing/capture", billingHandler.Capture)
 		protected.POST("/billing/release", billingHandler.Release)
+		protected.GET("/billing/wallet", billingViewHandler.Wallet)
+		protected.GET("/billing/usage", billingViewHandler.Usage)
 
 		protected.GET("/users/me", userHandler.GetMe)
 		protected.PATCH("/users/me", userHandler.UpdateMe)

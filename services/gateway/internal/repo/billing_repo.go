@@ -37,6 +37,20 @@ func (r *BillingRepo) GetWalletForUpdate(ctx context.Context, orgID int64) (*mod
 	return &w, nil
 }
 
+func (r *BillingRepo) GetWallet(ctx context.Context, orgID int64) (*model.Wallet, error) {
+	var w model.Wallet
+	err := r.db.WithContext(ctx).
+		Where("org_id = ?", orgID).
+		First(&w).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &w, nil
+}
+
 func (r *BillingRepo) CreateWallet(ctx context.Context, orgID int64) (*model.Wallet, error) {
 	wallet := model.Wallet{OrgID: orgID, Balance: 0, FrozenBalance: 0}
 	err := r.db.WithContext(ctx).

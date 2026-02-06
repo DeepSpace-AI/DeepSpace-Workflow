@@ -22,7 +22,7 @@ var (
 
 type ConversationItem struct {
 	ID        int64   `json:"id"`
-	ProjectID int64   `json:"project_id"`
+	ProjectID *int64  `json:"project_id"`
 	Title     *string `json:"title"`
 	CreatedAt string  `json:"created_at"`
 	UpdatedAt string  `json:"updated_at"`
@@ -44,11 +44,31 @@ func (s *Service) ListConversations(ctx context.Context, orgID, projectID int64)
 		return nil, err
 	}
 
+	pid := projectID
 	result := make([]ConversationItem, 0, len(items))
 	for _, item := range items {
 		result = append(result, ConversationItem{
 			ID:        item.ID,
-			ProjectID: projectID,
+			ProjectID: &pid,
+			Title:     item.Title,
+			CreatedAt: item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+			UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+	return result, nil
+}
+
+func (s *Service) ListStandaloneConversations(ctx context.Context, orgID int64) ([]ConversationItem, error) {
+	items, err := s.repo.ListStandaloneConversations(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]ConversationItem, 0, len(items))
+	for _, item := range items {
+		result = append(result, ConversationItem{
+			ID:        item.ID,
+			ProjectID: item.ProjectID,
 			Title:     item.Title,
 			CreatedAt: item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 			UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
@@ -68,15 +88,35 @@ func (s *Service) CreateConversation(ctx context.Context, orgID, projectID int64
 		return nil, err
 	}
 
+	pid := projectID
 	return &ConversationItem{
 		ID:        item.ID,
-		ProjectID: projectID,
+		ProjectID: &pid,
 		Title:     item.Title,
 		CreatedAt: item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
 }
 
+func (s *Service) CreateStandaloneConversation(ctx context.Context, orgID int64, title *string) (*ConversationItem, error) {
+	if title != nil {
+		value := strings.TrimSpace(*title)
+		title = &value
+	}
+
+	item, err := s.repo.CreateStandaloneConversation(ctx, orgID, title)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConversationItem{
+		ID:        item.ID,
+		ProjectID: item.ProjectID,
+		Title:     item.Title,
+		CreatedAt: item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}, nil
+}
 func (s *Service) ListMessages(ctx context.Context, orgID, conversationID int64) ([]MessageItem, error) {
 	conv, err := s.repo.GetConversation(ctx, orgID, conversationID)
 	if err != nil {
@@ -154,7 +194,7 @@ func (s *Service) UpdateConversation(ctx context.Context, orgID, conversationID 
 
 	return &ConversationItem{
 		ID:        item.ID,
-		ProjectID: derefInt64(item.ProjectID),
+		ProjectID: item.ProjectID,
 		Title:     item.Title,
 		CreatedAt: item.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
@@ -163,11 +203,4 @@ func (s *Service) UpdateConversation(ctx context.Context, orgID, conversationID 
 
 func (s *Service) DeleteConversation(ctx context.Context, orgID, conversationID int64) (bool, error) {
 	return s.repo.DeleteConversation(ctx, orgID, conversationID)
-}
-
-func derefInt64(value *int64) int64 {
-	if value == nil {
-		return 0
-	}
-	return *value
 }

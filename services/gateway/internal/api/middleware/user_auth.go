@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -45,8 +44,6 @@ func UserAuth(jwtManager *auth.JWTManager) gin.HandlerFunc {
 			})
 			return
 		}
-
-		log.Println(token, c.Request.URL)
 
 		claims, err := jwtManager.Verify(token)
 		if err != nil {

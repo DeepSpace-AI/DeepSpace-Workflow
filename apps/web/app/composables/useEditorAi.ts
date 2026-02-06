@@ -9,17 +9,41 @@ export function useEditorAi() {
     const aiPreviewType = ref<'polish' | 'expand' | 'summary'>('polish')
     const aiSelectionRange = ref<{ from: number; to: number } | null>(null)
     const aiStreamActive = ref(false)
+    const toast = useToast()
 
     // 编辑器引用
     const editorRef = ref<any>(null)
 
     // 创建编辑器专用Chat实例
     const editorChat = new Chat({
-        onError(error) {
+        onError(error: any) {
+            const status = error?.status || error?.cause?.status || error?.response?.status
+            const rawMessage = String(error?.message || '')
+            const lower = rawMessage.toLowerCase()
+            let message = rawMessage || 'AI 请求失败'
+            if (status === 402 || lower.includes('insufficient balance')) {
+                message = '余额不足，请先充值后再试'
+            } else if (status === 409 || lower.includes('ref_id conflict')) {
+                message = '计费信息冲突，请稍后重试'
+            }
+            toast.add({ title: message, color: 'red' })
             console.error('Editor AI error:', error)
         },
         onFinish: ({ message, isError, isDisconnect, isAbort }) => {
-            if (isError || isDisconnect || isAbort) return
+            if (isError || isDisconnect || isAbort) {
+                const parts = Array.isArray(message?.parts) ? message.parts : []
+                const errorText = parts
+                    .map((part: any) => (typeof part?.text === 'string' ? part.text : ''))
+                    .join(' ')
+                    .trim()
+                const lower = errorText.toLowerCase()
+                let display = errorText || 'AI 响应失败'
+                if (lower.includes('payment required') || lower.includes('insufficient balance')) {
+                    display = '余额不足，请先充值后再试'
+                }
+                toast.add({ title: display, color: 'red' })
+                return
+            }
             if (!showAiPreview.value) return
             
             const parts = Array.isArray(message?.parts) ? message.parts : []
@@ -48,9 +72,19 @@ export function useEditorAi() {
                 .join('')
             
             if (!text) return
+            
+            // 更新结果
             aiPreviewResult.value = text
+            
+            // 更新编辑器预览
             if (editorRef.value?.updateAiPreview) {
-                editorRef.value.updateAiPreview({ text, loading: editorChat.status === 'streaming' })
+                console.log('[EditorAI] Updating preview with text length:', text.length, 'streaming:', editorChat.status === 'streaming')
+                editorRef.value.updateAiPreview({ 
+                    text, 
+                    loading: editorChat.status === 'streaming' 
+                })
+            } else {
+                console.warn('[EditorAI] editorRef.updateAiPreview not available')
             }
         },
         { deep: true, immediate: true }
@@ -131,7 +165,7 @@ export function useEditorAi() {
             // @ts-ignore - ai-sdk Chat accepts direct assign in runtime
             editorChat.messages = []
             await nextTick()
-            editorChat.sendMessage({ text: prompt })
+            await editorChat.sendMessage({ text: prompt })
         } catch (error) {
             console.error('AI action error:', error)
             aiBusy.value = false
@@ -163,6 +197,14 @@ export function useEditorAi() {
         editorChat.stop()
         editorRef.value?.clearAiPreview?.()
         aiStreamActive.value = false
+        aiBusy.value = false
+    }
+
+    // 停止AI生成（由"终止"按钮触发）
+    function stopAiGeneration() {
+        console.log('[EditorAI] Stopping AI generation')
+        editorChat.stop()
+        closeAiPreview()
     }
 
     return {
@@ -181,5 +223,6 @@ export function useEditorAi() {
         handleAiAction,
         applyAiResult,
         closeAiPreview,
+        stopAiGeneration,
     }
 }

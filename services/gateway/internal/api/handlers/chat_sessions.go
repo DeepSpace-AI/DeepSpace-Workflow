@@ -44,6 +44,22 @@ type createConversationRequest struct {
 	Title *string `json:"title"`
 }
 
+func (h *ChatSessionHandler) ListStandaloneConversations(c *gin.Context) {
+	orgID, ok := getOrgID(c)
+	if !ok {
+		respondInternal(c, "org_id missing")
+		return
+	}
+
+	items, err := h.svc.ListStandaloneConversations(c.Request.Context(), orgID)
+	if err != nil {
+		respondInternal(c, "failed to list conversations")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"items": items})
+}
+
 func (h *ChatSessionHandler) CreateConversation(c *gin.Context) {
 	orgID, ok := getOrgID(c)
 	if !ok {
@@ -64,6 +80,28 @@ func (h *ChatSessionHandler) CreateConversation(c *gin.Context) {
 	}
 
 	item, err := h.svc.CreateConversation(c.Request.Context(), orgID, projectID, req.Title)
+	if err != nil {
+		respondInternal(c, "failed to create conversation")
+		return
+	}
+
+	c.JSON(http.StatusCreated, item)
+}
+
+func (h *ChatSessionHandler) CreateStandaloneConversation(c *gin.Context) {
+	orgID, ok := getOrgID(c)
+	if !ok {
+		respondInternal(c, "org_id missing")
+		return
+	}
+
+	var req createConversationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	item, err := h.svc.CreateStandaloneConversation(c.Request.Context(), orgID, req.Title)
 	if err != nil {
 		respondInternal(c, "failed to create conversation")
 		return

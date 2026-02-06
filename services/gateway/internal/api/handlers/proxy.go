@@ -44,6 +44,24 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 		return
 	}
 
+	if isModelListRequest(c) {
+		h.newapi.Proxy(c)
+		return
+	}
+
+	// If billing is enabled but no amount is provided, still guard zero-balance usage.
+	if h.billing != nil {
+		wallet, err := h.billing.GetWallet(c.Request.Context(), orgID)
+		if err != nil {
+			respondInternal(c, "failed to load wallet")
+			return
+		}
+		if wallet != nil && wallet.Balance <= 0 {
+			c.JSON(http.StatusPaymentRequired, gin.H{"error": "insufficient balance"})
+			return
+		}
+	}
+
 	amount, hasAmount, err := parseBillingAmount(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid billing amount"})
@@ -84,6 +102,20 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 		steps.NewUsageCapture(h.billing, h.usage),
 	)
 	_ = post.Run(c.Request.Context(), state)
+}
+
+func isModelListRequest(c *gin.Context) bool {
+	if c.Request == nil {
+		return false
+	}
+	if c.Request.Method != http.MethodGet {
+		return false
+	}
+	path := c.Param("path")
+	if path == "" {
+		path = strings.TrimPrefix(c.Request.URL.Path, "/v1")
+	}
+	return path == "/models" || strings.HasSuffix(path, "/models")
 }
 
 func parseBillingAmount(c *gin.Context) (float64, bool, error) {

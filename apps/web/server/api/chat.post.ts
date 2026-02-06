@@ -4,6 +4,7 @@ import {
 } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { randomUUID } from "crypto";
+import { getGatewayBase } from "../utils/gateway";
 
 const systemPrompt = `
 ### 功能描述：
@@ -90,6 +91,29 @@ export default defineLazyEventHandler(async () => {
 
     if (!messages || !Array.isArray(messages)) {
       throw createError({ statusCode: 400, statusMessage: "Messages required" });
+    }
+
+    // Preflight billing check to ensure proper 402 propagation when balance is insufficient.
+    try {
+      const base = getGatewayBase(apiUrl);
+      const walletResp = await $fetch<{ wallet?: any }>(`${base}/api/billing/wallet`, {
+        headers: { cookie: event.node.req.headers.cookie || "" },
+      });
+      const wallet = walletResp?.wallet ?? {};
+      const balance =
+        typeof wallet?.balance === "number"
+          ? wallet.balance
+          : typeof wallet?.Balance === "number"
+            ? wallet.Balance
+            : 0;
+      if (balance <= 0) {
+        throw createError({ statusCode: 402, statusMessage: "Payment Required" });
+      }
+    } catch (err: any) {
+      if (err?.statusCode === 402) {
+        throw err;
+      }
+      // If the check fails for any other reason, fall back to gateway enforcement.
     }
 
     const headers = event.node?.req?.headers ?? {};

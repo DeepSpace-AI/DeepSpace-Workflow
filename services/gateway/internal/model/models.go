@@ -73,6 +73,28 @@ type ProjectDocument struct {
 	UpdatedAt time.Time      `gorm:"autoUpdateTime;index:idx_project_documents_org_project_updated,priority:3"`
 }
 
+type ProjectSkill struct {
+	ID          int64 `gorm:"primaryKey;autoIncrement"`
+	OrgID       int64 `gorm:"index:idx_project_skills_org_project_updated,priority:1"`
+	ProjectID   int64 `gorm:"index:idx_project_skills_org_project_updated,priority:2"`
+	Name        string
+	Description *string
+	Prompt      *string       `gorm:"type:text"`
+	CreatedAt   time.Time     `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time     `gorm:"autoUpdateTime;index:idx_project_skills_org_project_updated,priority:3"`
+}
+
+type ProjectWorkflow struct {
+	ID          int64 `gorm:"primaryKey;autoIncrement"`
+	OrgID       int64 `gorm:"index:idx_project_workflows_org_project_updated,priority:1"`
+	ProjectID   int64 `gorm:"index:idx_project_workflows_org_project_updated,priority:2"`
+	Name        string
+	Description *string
+	Steps       datatypes.JSON `gorm:"type:jsonb"`
+	CreatedAt   time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time      `gorm:"autoUpdateTime;index:idx_project_workflows_org_project_updated,priority:3"`
+}
+
 type Wallet struct {
 	OrgID         int64     `gorm:"primaryKey"`
 	Balance       float64   `gorm:"type:numeric(20,6)"`

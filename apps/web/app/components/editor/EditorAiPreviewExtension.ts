@@ -27,6 +27,7 @@ type AiPreviewMeta =
 export type AiPreviewOptions = {
     onApply?: () => void
     onDiscard?: () => void
+    onStop?: () => void
 }
 
 const AiPreviewKey = new PluginKey<AiPreviewState>('ai-preview')
@@ -61,7 +62,17 @@ function createPreviewWidget(state: AiPreviewState, options: AiPreviewOptions) {
 
     const title = document.createElement('div')
     title.className = 'ai-preview-title'
-    title.textContent = resolveLabel(state.type)
+    
+    const titleText = document.createElement('span')
+    titleText.textContent = resolveLabel(state.type)
+    title.appendChild(titleText)
+
+    // 添加 loading 指示器（CSS 动画）
+    if (state.loading) {
+        const spinner = document.createElement('span')
+        spinner.className = 'ai-preview-spinner'
+        title.appendChild(spinner)
+    }
 
     const actions = document.createElement('div')
     actions.className = 'ai-preview-actions'
@@ -76,28 +87,56 @@ function createPreviewWidget(state: AiPreviewState, options: AiPreviewOptions) {
         options.onDiscard?.()
     })
 
-    const applyButton = document.createElement('button')
-    applyButton.type = 'button'
-    applyButton.className = 'ai-preview-btn ai-preview-btn-primary'
-    applyButton.textContent = '使用'
-    applyButton.addEventListener('click', (event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        options.onApply?.()
-    })
+    const actionButton = document.createElement('button')
+    actionButton.type = 'button'
+    actionButton.className = 'ai-preview-btn ai-preview-btn-primary'
+    
+    // 根据加载状态改变按钮行为
+    if (state.loading) {
+        actionButton.textContent = '终止'
+        actionButton.classList.add('ai-preview-btn-stop')
+        actionButton.addEventListener('click', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            options.onStop?.()
+        })
+    } else {
+        actionButton.textContent = '使用'
+        actionButton.addEventListener('click', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            options.onApply?.()
+        })
+    }
 
     actions.appendChild(discardButton)
-    actions.appendChild(applyButton)
+    actions.appendChild(actionButton)
 
     header.appendChild(title)
     header.appendChild(actions)
 
     const body = document.createElement('div')
     body.className = 'ai-preview-body'
-    body.textContent = state.text || (state.loading ? 'AI 生成中…' : '')
+    
+    // 显示内容或加载提示
+    if (state.text) {
+        body.textContent = state.text
+        // 如果正在加载中，添加流式更新的视觉效果
+        if (state.loading) {
+            body.classList.add('streaming')
+        }
+    } else if (state.loading) {
+        body.textContent = 'AI 生成中…'
+        body.classList.add('ai-preview-loading')
+    } else {
+        body.textContent = ''
+    }
 
     container.appendChild(header)
     container.appendChild(body)
+
+    // 保存引用以便更新
+    container.setAttribute('data-ai-preview', 'true')
 
     return container
 }
@@ -109,6 +148,7 @@ export const AiPreviewExtension = Extension.create<AiPreviewOptions>({
         return {
             onApply: undefined,
             onDiscard: undefined,
+            onStop: undefined,
         }
     },
 
@@ -157,11 +197,26 @@ export const AiPreviewExtension = Extension.create<AiPreviewOptions>({
                             }
                         }
                         if (meta?.type === 'update') {
-                            return {
+                            const updated = {
                                 ...value,
-                                ...meta.payload,
                                 loading: meta.payload.loading ?? value.loading,
                             }
+                            // 更新文本内容
+                            if (meta.payload.text !== undefined) {
+                                updated.text = meta.payload.text
+                            }
+                            // 更新位置
+                            if (meta.payload.from !== undefined) {
+                                updated.from = meta.payload.from
+                            }
+                            if (meta.payload.to !== undefined) {
+                                updated.to = meta.payload.to
+                            }
+                            // 更新类型
+                            if (meta.payload.type !== undefined) {
+                                updated.type = meta.payload.type
+                            }
+                            return updated
                         }
                         if (value.visible && value.from !== null && value.to !== null && tr.docChanged) {
                             const mappedFrom = tr.mapping.map(value.from)
@@ -182,10 +237,15 @@ export const AiPreviewExtension = Extension.create<AiPreviewOptions>({
                             return null
                         }
                         const pos = Math.min(Math.max(data.to, 0), state.doc.content.size)
+                        
+                        // 每次状态变化都重新创建 widget 以确保内容更新
+                        // 使用状态的文本和loading作为key的一部分来强制更新
+                        const widgetKey = `ai-preview-${pos}-${data.text.length}-${data.loading}`
+                        
                         const widget = Decoration.widget(
                             pos,
                             () => createPreviewWidget(data, this.options),
-                            { side: 1, key: 'ai-preview-widget' }
+                            { side: 1, key: widgetKey }
                         )
                         return DecorationSet.create(state.doc, [widget])
                     },
