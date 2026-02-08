@@ -17,6 +17,20 @@ func NewProjectSkillHandler(svc *projectskill.Service) *ProjectSkillHandler {
 	return &ProjectSkillHandler{svc: svc}
 }
 
+// List godoc
+// @Summary 项目技能列表
+// @Description 获取指定项目的技能列表
+// @Tags 项目技能
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/skills [get]
 func (h *ProjectSkillHandler) List(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -45,6 +59,21 @@ type createSkillRequest struct {
 	Prompt      *string `json:"prompt"`
 }
 
+// Create godoc
+// @Summary 创建项目技能
+// @Description 在指定项目中创建技能
+// @Tags 项目技能
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param data body createSkillRequest true "技能数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/skills [post]
 func (h *ProjectSkillHandler) Create(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -83,6 +112,23 @@ type updateSkillRequest struct {
 	Prompt      *string `json:"prompt"`
 }
 
+// Update godoc
+// @Summary 更新项目技能
+// @Description 更新指定项目的技能信息
+// @Tags 项目技能
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param skillId path int true "技能ID"
+// @Param data body updateSkillRequest true "技能更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "技能不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/skills/{skillId} [patch]
 func (h *ProjectSkillHandler) Update(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -130,6 +176,22 @@ func (h *ProjectSkillHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+// Delete godoc
+// @Summary 删除项目技能
+// @Description 删除指定项目的技能
+// @Tags 项目技能
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param skillId path int true "技能ID"
+// @Success 204 {object} map[string]interface{} "删除成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "技能不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/skills/{skillId} [delete]
 func (h *ProjectSkillHandler) Delete(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {

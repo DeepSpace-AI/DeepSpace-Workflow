@@ -1,0 +1,3674 @@
+basePath: /api
+definitions:
+  handlers.billingRequest:
+    properties:
+      amount:
+        type: number
+      metadata:
+        additionalProperties: {}
+        type: object
+      ref_id:
+        type: string
+    type: object
+  handlers.changePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  handlers.createConversationRequest:
+    properties:
+      title:
+        type: string
+    type: object
+  handlers.createDocumentRequest:
+    properties:
+      content:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
+  handlers.createKnowledgeBaseRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: integer
+      scope:
+        type: string
+    type: object
+  handlers.createMessageRequest:
+    properties:
+      content:
+        type: string
+      model:
+        type: string
+      role:
+        type: string
+      trace_id:
+        type: string
+    type: object
+  handlers.createProjectRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  handlers.createSkillRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      prompt:
+        type: string
+    type: object
+  handlers.createUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      profile:
+        $ref: '#/definitions/handlers.updateUserProfileRequest'
+      role:
+        type: string
+      settings:
+        $ref: '#/definitions/handlers.updateUserSettingsRequest'
+      status:
+        type: string
+    type: object
+  handlers.createWorkflowRequest:
+    type: object
+  handlers.enqueueEmailRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.sendEmailRequest'
+        type: array
+    type: object
+  handlers.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.modelConfirmItem:
+    properties:
+      name:
+        type: string
+      provider:
+        type: string
+    type: object
+  handlers.modelConfirmRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.modelConfirmItem'
+        type: array
+    type: object
+  handlers.modelCreateRequest:
+    properties:
+      capabilities:
+        items:
+          type: string
+        type: array
+      currency:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      name:
+        type: string
+      price_input:
+        type: number
+      price_output:
+        type: number
+      provider:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers.modelPricingItem:
+    properties:
+      capabilities:
+        items:
+          type: string
+        type: array
+      currency:
+        type: string
+      id:
+        type: string
+      price_input:
+        type: number
+      price_output:
+        type: number
+      status:
+        type: string
+    type: object
+  handlers.modelPricingRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.modelPricingItem'
+        type: array
+    type: object
+  handlers.modelSyncResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/newapi.UpstreamModel'
+        type: array
+    type: object
+  handlers.modelUpdateRequest:
+    properties:
+      capabilities:
+        items:
+          type: string
+        type: array
+      currency:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      price_input:
+        type: number
+      price_output:
+        type: number
+      provider:
+        type: string
+      provider_icon:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers.planCreateRequest:
+    properties:
+      billing_mode:
+        type: string
+      currency:
+        type: string
+      name:
+        type: string
+      price_input:
+        type: number
+      price_output:
+        type: number
+      price_request:
+        type: number
+      status:
+        type: string
+    type: object
+  handlers.planUpdateRequest:
+    properties:
+      billing_mode:
+        type: string
+      currency:
+        type: string
+      name:
+        type: string
+      price_input:
+        type: number
+      price_output:
+        type: number
+      price_request:
+        type: number
+      status:
+        type: string
+    type: object
+  handlers.registerRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  handlers.sendEmailRequest:
+    properties:
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      html:
+        type: string
+      html_template:
+        type: string
+      reply_to:
+        type: string
+      subject:
+        type: string
+      template_data:
+        additionalProperties: {}
+        type: object
+      text:
+        type: string
+      to:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  handlers.subscriptionCreateRequest:
+    properties:
+      end_at:
+        type: string
+      plan_id:
+        type: integer
+      start_at:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  handlers.subscriptionUpdateRequest:
+    properties:
+      end_at:
+        type: string
+      start_at:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers.updateConversationRequest:
+    properties:
+      title:
+        type: string
+    type: object
+  handlers.updateDocumentRequest:
+    properties:
+      content:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
+  handlers.updateKnowledgeBaseRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  handlers.updateProjectRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  handlers.updateSkillRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      prompt:
+        type: string
+    type: object
+  handlers.updateUserAdminRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      profile:
+        $ref: '#/definitions/handlers.updateUserProfileRequest'
+      role:
+        type: string
+      settings:
+        $ref: '#/definitions/handlers.updateUserSettingsRequest'
+      status:
+        type: string
+    type: object
+  handlers.updateUserProfileRequest:
+    properties:
+      avatar_url:
+        type: string
+      bio:
+        type: string
+      display_name:
+        type: string
+      full_name:
+        type: string
+      phone:
+        type: string
+      title:
+        type: string
+    type: object
+  handlers.updateUserRequest:
+    properties:
+      profile:
+        $ref: '#/definitions/handlers.updateUserProfileRequest'
+      settings:
+        $ref: '#/definitions/handlers.updateUserSettingsRequest'
+    type: object
+  handlers.updateUserSettingsRequest:
+    properties:
+      locale:
+        type: string
+      theme:
+        type: string
+      timezone:
+        type: string
+    type: object
+  handlers.updateWorkflowRequest:
+    type: object
+  newapi.UpstreamModel:
+    properties:
+      name:
+        type: string
+      provider:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: DeepSpace Gateway 接口文档
+  title: DeepSpace Gateway API
+  version: "1.0"
+paths:
+  /admin/models:
+    get:
+      consumes:
+      - application/json
+      description: 获取全部模型列表
+      parameters:
+      - description: 提供商
+        in: query
+        name: provider
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：模型列表
+      tags:
+      - 管理-模型
+    post:
+      consumes:
+      - application/json
+      description: 新建模型配置
+      parameters:
+      - description: 模型数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.modelCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 模型已存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建模型
+      tags:
+      - 管理-模型
+  /admin/models/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: 更新模型配置
+      parameters:
+      - description: 模型ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 模型更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.modelUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 模型不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新模型
+      tags:
+      - 管理-模型
+  /admin/models/confirm:
+    post:
+      consumes:
+      - application/json
+      description: 批量确认模型列表
+      parameters:
+      - description: 模型确认数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.modelConfirmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 确认成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：确认模型
+      tags:
+      - 管理-模型
+  /admin/models/pricing:
+    post:
+      consumes:
+      - application/json
+      description: 批量更新模型定价
+      parameters:
+      - description: 定价数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.modelPricingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：批量定价
+      tags:
+      - 管理-模型
+  /admin/models/providers:
+    get:
+      consumes:
+      - application/json
+      description: 获取全部模型提供商
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：模型提供商
+      tags:
+      - 管理-模型
+  /admin/models/sync:
+    post:
+      consumes:
+      - application/json
+      description: 从上游同步模型列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 同步成功
+          schema:
+            $ref: '#/definitions/handlers.modelSyncResponse'
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：同步上游模型
+      tags:
+      - 管理-模型
+  /admin/plans:
+    get:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：套餐列表
+      tags:
+      - 管理-套餐
+    post:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 套餐数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.planCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建套餐
+      tags:
+      - 管理-套餐
+  /admin/plans/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 套餐ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 套餐更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.planUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 套餐不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新套餐
+      tags:
+      - 管理-套餐
+  /admin/subscriptions:
+    post:
+      consumes:
+      - application/json
+      description: 创建用户订阅
+      parameters:
+      - description: 订阅数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.subscriptionCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 套餐不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 已有生效订阅
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建订阅
+      tags:
+      - 管理-订阅
+  /admin/subscriptions/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: 更新订阅状态或时间
+      parameters:
+      - description: 订阅ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 订阅更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.subscriptionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 订阅不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新订阅
+      tags:
+      - 管理-订阅
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 搜索关键字
+        in: query
+        name: search
+        type: string
+      - description: 角色
+        in: query
+        name: role
+        type: string
+      - description: 状态
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：用户列表
+      tags:
+      - 管理-用户
+    post:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建用户
+      tags:
+      - 管理-用户
+  /admin/users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：删除用户
+      tags:
+      - 管理-用户
+    get:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 用户不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：获取用户
+      tags:
+      - 管理-用户
+    patch:
+      consumes:
+      - application/json
+      description: 需要管理员权限
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateUserAdminRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 用户不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新用户
+      tags:
+      - 管理-用户
+  /admin/users/{id}/subscription:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户当前生效订阅
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 订阅不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：获取用户订阅
+      tags:
+      - 管理-订阅
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 使用邮箱密码登录并设置登录 Cookie
+      parameters:
+      - description: 登录信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 账号或密码错误
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 用户登录
+      tags:
+      - 认证
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 清理登录 Cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 退出成功
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 用户退出登录
+      tags:
+      - 认证
+  /auth/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录用户的 user_id
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 获取当前用户
+      tags:
+      - 认证
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 使用邮箱密码注册并设置登录 Cookie
+      parameters:
+      - description: 注册信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 邮箱已注册
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 用户注册
+      tags:
+      - 认证
+  /billing/capture:
+    post:
+      consumes:
+      - application/json
+      description: 确认扣减预扣余额
+      parameters:
+      - description: 扣减信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.billingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 扣减成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 引用冲突
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 扣减余额
+      tags:
+      - 计费
+  /billing/hold:
+    post:
+      consumes:
+      - application/json
+      description: 预扣用户余额
+      parameters:
+      - description: 预扣信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.billingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 预扣成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 引用冲突
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 预扣余额
+      tags:
+      - 计费
+  /billing/release:
+    post:
+      consumes:
+      - application/json
+      description: 释放已预扣余额
+      parameters:
+      - description: 释放信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.billingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 释放成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 引用冲突
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 释放预扣
+      tags:
+      - 计费
+  /billing/usage:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户用量明细
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 开始时间（RFC3339）
+        in: query
+        name: start
+        type: string
+      - description: 结束时间（RFC3339）
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 用量明细
+      tags:
+      - 计费
+  /billing/wallet:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户钱包与近 24 小时用量
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 获取钱包
+      tags:
+      - 计费
+  /conversations:
+    get:
+      consumes:
+      - application/json
+      description: 获取独立对话列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 独立对话列表
+      tags:
+      - 对话
+    post:
+      consumes:
+      - application/json
+      description: 创建独立对话
+      parameters:
+      - description: 对话数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createConversationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建独立对话
+      tags:
+      - 对话
+  /conversations/{conversationId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定对话
+      parameters:
+      - description: 对话ID
+        in: path
+        name: conversationId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 对话不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除对话
+      tags:
+      - 对话
+    patch:
+      consumes:
+      - application/json
+      description: 更新对话标题
+      parameters:
+      - description: 对话ID
+        in: path
+        name: conversationId
+        required: true
+        type: integer
+      - description: 对话更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateConversationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 对话不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新对话
+      tags:
+      - 对话
+  /conversations/{conversationId}/messages:
+    get:
+      consumes:
+      - application/json
+      description: 获取对话消息列表
+      parameters:
+      - description: 对话ID
+        in: path
+        name: conversationId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 对话不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 对话消息列表
+      tags:
+      - 对话
+    post:
+      consumes:
+      - application/json
+      description: 在对话中追加消息
+      parameters:
+      - description: 对话ID
+        in: path
+        name: conversationId
+        required: true
+        type: integer
+      - description: 消息数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 对话不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建对话消息
+      tags:
+      - 对话
+  /email/enqueue:
+    post:
+      consumes:
+      - application/json
+      description: 批量邮件入队
+      parameters:
+      - description: 邮件列表
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.enqueueEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 入队成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 邮件入队
+      tags:
+      - 邮件
+  /email/send:
+    post:
+      consumes:
+      - application/json
+      description: 立即发送邮件
+      parameters:
+      - description: 邮件内容
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.sendEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 发送成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 发送邮件
+      tags:
+      - 邮件
+  /knowledge-bases:
+    get:
+      consumes:
+      - application/json
+      description: 获取知识库列表
+      parameters:
+      - description: 范围
+        in: query
+        name: scope
+        type: string
+      - description: 项目ID
+        in: query
+        name: project_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 知识库列表
+      tags:
+      - 知识库
+    post:
+      consumes:
+      - application/json
+      description: 创建新的知识库
+      parameters:
+      - description: 知识库数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createKnowledgeBaseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 项目不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建知识库
+      tags:
+      - 知识库
+  /knowledge-bases/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定知识库
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 知识库不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除知识库
+      tags:
+      - 知识库
+    get:
+      consumes:
+      - application/json
+      description: 获取知识库详情
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 知识库不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 获取知识库
+      tags:
+      - 知识库
+    patch:
+      consumes:
+      - application/json
+      description: 更新知识库名称或描述
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 知识库更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateKnowledgeBaseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 知识库不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新知识库
+      tags:
+      - 知识库
+  /knowledge-bases/{id}/documents:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定知识库的文档列表
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 知识库文档列表
+      tags:
+      - 知识库文档
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传文件到指定知识库
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 上传文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 上传成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 知识库不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "413":
+          description: 文件过大
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 上传知识库文档
+      tags:
+      - 知识库文档
+  /knowledge-bases/{id}/documents/{docId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定知识库的文档
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文档ID
+        in: path
+        name: docId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 文档不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除知识库文档
+      tags:
+      - 知识库文档
+  /knowledge-bases/{id}/documents/{docId}/download:
+    get:
+      consumes:
+      - application/json
+      description: 下载指定知识库的文档
+      parameters:
+      - description: 知识库ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文档ID
+        in: path
+        name: docId
+        required: true
+        type: integer
+      - description: 下载方式
+        in: query
+        name: disposition
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 文件流
+          schema:
+            type: file
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 文档不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 下载知识库文档
+      tags:
+      - 知识库文档
+  /models:
+    get:
+      consumes:
+      - application/json
+      description: 获取可用模型列表
+      parameters:
+      - description: 提供商
+        in: query
+        name: provider
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 模型列表
+      tags:
+      - 模型
+  /models/providers:
+    get:
+      consumes:
+      - application/json
+      description: 获取可用模型提供商
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 模型提供商列表
+      tags:
+      - 模型
+  /projects:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的项目列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 项目列表
+      tags:
+      - 项目
+    post:
+      consumes:
+      - application/json
+      description: 创建新项目
+      parameters:
+      - description: 项目数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建项目
+      tags:
+      - 项目
+  /projects/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定项目
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 项目不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除项目
+      tags:
+      - 项目
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目详情
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 项目不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 获取项目详情
+      tags:
+      - 项目
+    patch:
+      consumes:
+      - application/json
+      description: 更新项目名称或描述
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 项目更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 项目不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新项目
+      tags:
+      - 项目
+  /projects/{id}/conversations:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目的对话列表
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 项目对话列表
+      tags:
+      - 对话
+    post:
+      consumes:
+      - application/json
+      description: 在指定项目中创建对话
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 对话数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createConversationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建项目对话
+      tags:
+      - 对话
+  /projects/{id}/documents:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目的文档列表
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 项目文档列表
+      tags:
+      - 项目文档
+    post:
+      consumes:
+      - application/json
+      description: 在指定项目中创建文档
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文档数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建项目文档
+      tags:
+      - 项目文档
+  /projects/{id}/documents/{docId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定项目的文档
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文档ID
+        in: path
+        name: docId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 文档不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除项目文档
+      tags:
+      - 项目文档
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目的文档详情
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文档ID
+        in: path
+        name: docId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 文档不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 获取项目文档
+      tags:
+      - 项目文档
+    patch:
+      consumes:
+      - application/json
+      description: 更新指定项目的文档内容
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 文档ID
+        in: path
+        name: docId
+        required: true
+        type: integer
+      - description: 文档更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateDocumentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 文档不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新项目文档
+      tags:
+      - 项目文档
+  /projects/{id}/skills:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目的技能列表
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 项目技能列表
+      tags:
+      - 项目技能
+    post:
+      consumes:
+      - application/json
+      description: 在指定项目中创建技能
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 技能数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createSkillRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建项目技能
+      tags:
+      - 项目技能
+  /projects/{id}/skills/{skillId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定项目的技能
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 技能ID
+        in: path
+        name: skillId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 技能不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除项目技能
+      tags:
+      - 项目技能
+    patch:
+      consumes:
+      - application/json
+      description: 更新指定项目的技能信息
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 技能ID
+        in: path
+        name: skillId
+        required: true
+        type: integer
+      - description: 技能更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateSkillRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 技能不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新项目技能
+      tags:
+      - 项目技能
+  /projects/{id}/workflows:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定项目的工作流列表
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 项目工作流列表
+      tags:
+      - 项目工作流
+    post:
+      consumes:
+      - application/json
+      description: 在指定项目中创建工作流
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 工作流数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createWorkflowRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 创建项目工作流
+      tags:
+      - 项目工作流
+  /projects/{id}/workflows/{workflowId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定项目的工作流
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 工作流ID
+        in: path
+        name: workflowId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 工作流不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 删除项目工作流
+      tags:
+      - 项目工作流
+    patch:
+      consumes:
+      - application/json
+      description: 更新指定项目的工作流
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 工作流ID
+        in: path
+        name: workflowId
+        required: true
+        type: integer
+      - description: 工作流更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateWorkflowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 工作流不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新项目工作流
+      tags:
+      - 项目工作流
+  /projects/stats:
+    get:
+      consumes:
+      - application/json
+      description: 获取项目与资料统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 项目统计
+      tags:
+      - 项目
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: 返回当前登录用户的基础信息、资料与设置
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 用户不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 获取当前用户信息
+      tags:
+      - 用户
+    patch:
+      consumes:
+      - application/json
+      description: 更新当前登录用户的资料与设置
+      parameters:
+      - description: 用户资料与设置
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 用户不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 更新当前用户信息
+      tags:
+      - 用户
+  /users/me/password:
+    post:
+      consumes:
+      - application/json
+      description: 校验旧密码后更新新密码
+      parameters:
+      - description: 密码信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.changePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 账号或密码错误
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 修改当前用户密码
+      tags:
+      - 用户
+  /v1/{path}:
+    delete:
+      consumes:
+      - application/json
+      description: 转发 /v1 下的请求到 NewAPI
+      parameters:
+      - description: 转发路径
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 代理成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 代理 NewAPI
+      tags:
+      - 代理
+    get:
+      consumes:
+      - application/json
+      description: 转发 /v1 下的请求到 NewAPI
+      parameters:
+      - description: 转发路径
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 代理成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 代理 NewAPI
+      tags:
+      - 代理
+    patch:
+      consumes:
+      - application/json
+      description: 转发 /v1 下的请求到 NewAPI
+      parameters:
+      - description: 转发路径
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 代理成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 代理 NewAPI
+      tags:
+      - 代理
+    post:
+      consumes:
+      - application/json
+      description: 转发 /v1 下的请求到 NewAPI
+      parameters:
+      - description: 转发路径
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 代理成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 代理 NewAPI
+      tags:
+      - 代理
+    put:
+      consumes:
+      - application/json
+      description: 转发 /v1 下的请求到 NewAPI
+      parameters:
+      - description: 转发路径
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 代理成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "402":
+          description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 代理 NewAPI
+      tags:
+      - 代理
+swagger: "2.0"

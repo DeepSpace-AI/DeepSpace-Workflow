@@ -4,10 +4,11 @@
   "description": "",
   "private": true,
   "scripts": {
-    "web:dev" : "pnpm -C apps/web dev",
-    "admin:dev" : "pnpm -C apps/admin dev",
-    "gateway:dev" : "cd services/gateway && air",
-    "worker:dev" : "cd services/worker && go run ./cmd/worker"
+    "web:dev": "pnpm -C apps/web dev",
+    "admin:dev": "pnpm -C apps/admin dev",
+    "gateway:dev": "cd services/gateway && air",
+    "worker:dev": "cd services/worker && go run ./cmd/worker",
+    "openapi": "swag init -g ./services/gateway/cmd/gateway/main.go -o ./services/gateway/cmd/gateway/docs"
   },
   "keywords": [],
   "author": "LemonPanda",

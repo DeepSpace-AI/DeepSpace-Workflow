@@ -7,7 +7,7 @@
           <UBadge color="neutral" variant="soft">共 {{ totalCount }} 条</UBadge>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <UInput v-model="searchTerm" placeholder="搜索组织ID" icon="i-heroicons-magnifying-glass" class="w-60" />
+          <UInput v-model="searchTerm" placeholder="搜索用户ID" icon="i-heroicons-magnifying-glass" class="w-60" />
           <USelect v-model="pageSize" :items="pageSizeOptions" class="w-24" />
         </div>
       </div>
@@ -28,7 +28,7 @@ import { computed, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 
 type WalletRow = {
-  org_id: number
+  user_id: number
   balance: number
   frozen_balance: number
   updated_at: string
@@ -36,25 +36,25 @@ type WalletRow = {
 
 const rawItems = ref<WalletRow[]>([
   {
-    org_id: 1001,
+    user_id: 1001,
     balance: 1280.5,
     frozen_balance: 120,
     updated_at: '2025-02-01T10:20:00Z'
   },
   {
-    org_id: 1002,
+    user_id: 1002,
     balance: 320.12,
     frozen_balance: 0,
     updated_at: '2025-01-20T08:10:00Z'
   },
   {
-    org_id: 1003,
+    user_id: 1003,
     balance: 58.9,
     frozen_balance: 12.5,
     updated_at: '2025-01-15T09:30:00Z'
   },
   {
-    org_id: 1004,
+    user_id: 1004,
     balance: 860.75,
     frozen_balance: 42,
     updated_at: '2025-01-05T17:05:00Z'
@@ -74,7 +74,7 @@ const pageSizeOptions = [
 const filteredItems = computed(() => {
   const keyword = searchTerm.value.trim()
   return rawItems.value.filter((item) => {
-    return !keyword || String(item.org_id).includes(keyword)
+    return !keyword || String(item.user_id).includes(keyword)
   })
 })
 
@@ -100,8 +100,8 @@ const formatTime = (value: string) => {
 
 const columns = computed<TableColumn<WalletRow>[]>(() => [
   {
-    accessorKey: 'org_id',
-    header: '组织ID',
+    accessorKey: 'user_id',
+    header: '用户ID',
     meta: { class: { th: 'w-28' } }
   },
   {

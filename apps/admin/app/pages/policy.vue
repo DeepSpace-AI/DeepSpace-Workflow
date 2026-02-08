@@ -65,7 +65,7 @@ const rawItems = ref<PolicyRow[]>([
   },
   {
     id: 'policy-04',
-    name: '组织预算上限',
+    name: '用户预算上限',
     type: 'budget',
     status: 'active',
     threshold: '¥5,000 / 月',

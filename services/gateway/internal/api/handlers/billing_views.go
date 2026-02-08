@@ -23,6 +23,18 @@ func NewBillingViewHandler(billingSvc *billing.Service, usageSvc *usage.Service)
 	}
 }
 
+// Wallet godoc
+// @Summary 获取钱包
+// @Description 获取当前用户钱包与近 24 小时用量
+// @Tags 计费
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /billing/wallet [get]
 func (h *BillingViewHandler) Wallet(c *gin.Context) {
 	userID, ok := getUserID(c)
 	if !ok {
@@ -54,6 +66,23 @@ func (h *BillingViewHandler) Wallet(c *gin.Context) {
 	})
 }
 
+// Usage godoc
+// @Summary 用量明细
+// @Description 获取当前用户用量明细
+// @Tags 计费
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Param start query string false "开始时间（RFC3339）"
+// @Param end query string false "结束时间（RFC3339）"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /billing/usage [get]
 func (h *BillingViewHandler) Usage(c *gin.Context) {
 	if h.usageSvc == nil {
 		respondInternal(c, "usage service unavailable")

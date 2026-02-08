@@ -17,6 +17,20 @@ func NewProjectDocumentHandler(svc *projectdocument.Service) *ProjectDocumentHan
 	return &ProjectDocumentHandler{svc: svc}
 }
 
+// List godoc
+// @Summary 项目文档列表
+// @Description 获取指定项目的文档列表
+// @Tags 项目文档
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/documents [get]
 func (h *ProjectDocumentHandler) List(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -45,6 +59,21 @@ type createDocumentRequest struct {
 	Tags    []string `json:"tags"`
 }
 
+// Create godoc
+// @Summary 创建项目文档
+// @Description 在指定项目中创建文档
+// @Tags 项目文档
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param data body createDocumentRequest true "文档数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/documents [post]
 func (h *ProjectDocumentHandler) Create(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -73,6 +102,22 @@ func (h *ProjectDocumentHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, item)
 }
 
+// Get godoc
+// @Summary 获取项目文档
+// @Description 获取指定项目的文档详情
+// @Tags 项目文档
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param docId path int true "文档ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "文档不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/documents/{docId} [get]
 func (h *ProjectDocumentHandler) Get(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -111,6 +156,23 @@ type updateDocumentRequest struct {
 	Tags    *[]string `json:"tags"`
 }
 
+// Update godoc
+// @Summary 更新项目文档
+// @Description 更新指定项目的文档内容
+// @Tags 项目文档
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param docId path int true "文档ID"
+// @Param data body updateDocumentRequest true "文档更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "文档不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/documents/{docId} [patch]
 func (h *ProjectDocumentHandler) Update(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -158,6 +220,22 @@ func (h *ProjectDocumentHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+// Delete godoc
+// @Summary 删除项目文档
+// @Description 删除指定项目的文档
+// @Tags 项目文档
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param docId path int true "文档ID"
+// @Success 204 {object} map[string]interface{} "删除成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "文档不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/documents/{docId} [delete]
 func (h *ProjectDocumentHandler) Delete(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {

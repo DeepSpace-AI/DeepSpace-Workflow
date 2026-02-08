@@ -38,6 +38,19 @@ type planUpdateRequest struct {
 	PriceRequest *float64 `json:"price_request"`
 }
 
+// List godoc
+// @Summary 管理员：套餐列表
+// @Description 需要管理员权限
+// @Tags 管理-套餐
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/plans [get]
 func (h *PlanHandler) List(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "套餐服务未配置")
@@ -53,6 +66,21 @@ func (h *PlanHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
+// Create godoc
+// @Summary 管理员：创建套餐
+// @Description 需要管理员权限
+// @Tags 管理-套餐
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body planCreateRequest true "套餐数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/plans [post]
 func (h *PlanHandler) Create(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "套餐服务未配置")
@@ -82,6 +110,23 @@ func (h *PlanHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, item)
 }
 
+// Update godoc
+// @Summary 管理员：更新套餐
+// @Description 需要管理员权限
+// @Tags 管理-套餐
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "套餐ID"
+// @Param data body planUpdateRequest true "套餐更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "套餐不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/plans/{id} [patch]
 func (h *PlanHandler) Update(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "套餐服务未配置")

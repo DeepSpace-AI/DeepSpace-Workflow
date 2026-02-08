@@ -33,6 +33,23 @@ type subscriptionUpdateRequest struct {
 	EndAt   *string `json:"end_at"`
 }
 
+// Create godoc
+// @Summary 管理员：创建订阅
+// @Description 创建用户订阅
+// @Tags 管理-订阅
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body subscriptionCreateRequest true "订阅数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "套餐不存在"
+// @Failure 409 {object} map[string]interface{} "已有生效订阅"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/subscriptions [post]
 func (h *PlanSubscriptionHandler) Create(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "订阅服务未配置")
@@ -86,6 +103,23 @@ func (h *PlanSubscriptionHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, item)
 }
 
+// Update godoc
+// @Summary 管理员：更新订阅
+// @Description 更新订阅状态或时间
+// @Tags 管理-订阅
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "订阅ID"
+// @Param data body subscriptionUpdateRequest true "订阅更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "订阅不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/subscriptions/{id} [patch]
 func (h *PlanSubscriptionHandler) Update(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "订阅服务未配置")
@@ -141,6 +175,22 @@ func (h *PlanSubscriptionHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+// GetOrgActive godoc
+// @Summary 管理员：获取用户订阅
+// @Description 获取用户当前生效订阅
+// @Tags 管理-订阅
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "用户ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "订阅不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/users/{id}/subscription [get]
 func (h *PlanSubscriptionHandler) GetOrgActive(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "订阅服务未配置")

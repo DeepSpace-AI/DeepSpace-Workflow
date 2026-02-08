@@ -44,6 +44,19 @@ type changePasswordRequest struct {
 	NewPassword string `json:"new_password"`
 }
 
+// GetMe godoc
+// @Summary 获取当前用户信息
+// @Description 返回当前登录用户的基础信息、资料与设置
+// @Tags 用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /users/me [get]
 func (h *UserHandler) GetMe(c *gin.Context) {
 	userID, ok := getUserID(c)
 	if !ok {
@@ -75,6 +88,21 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 	})
 }
 
+// UpdateMe godoc
+// @Summary 更新当前用户信息
+// @Description 更新当前登录用户的资料与设置
+// @Tags 用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body updateUserRequest true "用户资料与设置"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /users/me [patch]
 func (h *UserHandler) UpdateMe(c *gin.Context) {
 	userID, ok := getUserID(c)
 	if !ok {
@@ -138,6 +166,20 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 	})
 }
 
+// ChangePassword godoc
+// @Summary 修改当前用户密码
+// @Description 校验旧密码后更新新密码
+// @Tags 用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body changePasswordRequest true "密码信息"
+// @Success 200 {object} map[string]interface{} "修改成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "账号或密码错误"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /users/me/password [post]
 func (h *UserHandler) ChangePassword(c *gin.Context) {
 	userID, ok := getUserID(c)
 	if !ok {
@@ -168,19 +210,6 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
-func getUserID(c *gin.Context) (int64, bool) {
-	value, ok := c.Get("user_id")
-	if !ok {
-		return 0, false
-	}
-
-	id, ok := value.(int64)
-	if !ok {
-		return 0, false
-	}
-	return id, true
-}
-
 type createUserRequest struct {
 	Email    string                     `json:"email"`
 	Password string                     `json:"password"`
@@ -199,6 +228,24 @@ type updateUserAdminRequest struct {
 	Settings *updateUserSettingsRequest `json:"settings"`
 }
 
+// List godoc
+// @Summary 管理员：用户列表
+// @Description 需要管理员权限
+// @Tags 管理-用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Param search query string false "搜索关键字"
+// @Param role query string false "角色"
+// @Param status query string false "状态"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/users [get]
 func (h *UserHandler) List(c *gin.Context) {
 	page := parseIntQueryUser(c, "page", 1)
 	pageSize := parseIntQueryUser(c, "page_size", 20)
@@ -250,6 +297,21 @@ func (h *UserHandler) List(c *gin.Context) {
 	})
 }
 
+// Create godoc
+// @Summary 管理员：创建用户
+// @Description 需要管理员权限
+// @Tags 管理-用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body createUserRequest true "用户信息"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/users [post]
 func (h *UserHandler) Create(c *gin.Context) {
 	var req createUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -298,6 +360,22 @@ func (h *UserHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, userModel)
 }
 
+// Get godoc
+// @Summary 管理员：获取用户
+// @Description 需要管理员权限
+// @Tags 管理-用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "用户ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/users/{id} [get]
 func (h *UserHandler) Get(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -330,6 +408,23 @@ func (h *UserHandler) Get(c *gin.Context) {
 	})
 }
 
+// Update godoc
+// @Summary 管理员：更新用户
+// @Description 需要管理员权限
+// @Tags 管理-用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "用户ID"
+// @Param data body updateUserAdminRequest true "用户信息"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/users/{id} [patch]
 func (h *UserHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -381,6 +476,21 @@ func (h *UserHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// Delete godoc
+// @Summary 管理员：删除用户
+// @Description 需要管理员权限
+// @Tags 管理-用户
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "用户ID"
+// @Success 200 {object} map[string]interface{} "删除成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/users/{id} [delete]
 func (h *UserHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)

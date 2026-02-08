@@ -23,6 +23,19 @@ type modelSyncResponse struct {
 	Items []newapi.UpstreamModel `json:"items"`
 }
 
+// Sync godoc
+// @Summary 管理员：同步上游模型
+// @Description 从上游同步模型列表
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} modelSyncResponse "同步成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models/sync [post]
 func (h *ModelHandler) Sync(c *gin.Context) {
 	if h == nil || h.newapi == nil {
 		respondInternal(c, "上游接口未配置")
@@ -49,6 +62,22 @@ type modelCreateRequest struct {
 	Metadata     map[string]any `json:"metadata"`
 }
 
+// Create godoc
+// @Summary 管理员：创建模型
+// @Description 新建模型配置
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body modelCreateRequest true "模型数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 409 {object} map[string]interface{} "模型已存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models [post]
 func (h *ModelHandler) Create(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -112,6 +141,23 @@ type modelPricingRequest struct {
 	Items []modelPricingItem `json:"items"`
 }
 
+// Update godoc
+// @Summary 管理员：更新模型
+// @Description 更新模型配置
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path string true "模型ID"
+// @Param data body modelUpdateRequest true "模型更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 404 {object} map[string]interface{} "模型不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models/{id} [patch]
 func (h *ModelHandler) Update(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -148,6 +194,19 @@ func (h *ModelHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+// List godoc
+// @Summary 模型列表
+// @Description 获取可用模型列表
+// @Tags 模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param provider query string false "提供商"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /models [get]
 func (h *ModelHandler) List(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -171,6 +230,18 @@ func (h *ModelHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
+// ListProviders godoc
+// @Summary 模型提供商列表
+// @Description 获取可用模型提供商
+// @Tags 模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /models/providers [get]
 func (h *ModelHandler) ListProviders(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -186,6 +257,21 @@ func (h *ModelHandler) ListProviders(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
+// ConfirmBatch godoc
+// @Summary 管理员：确认模型
+// @Description 批量确认模型列表
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body modelConfirmRequest true "模型确认数据"
+// @Success 200 {object} map[string]interface{} "确认成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models/confirm [post]
 func (h *ModelHandler) ConfirmBatch(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -219,6 +305,20 @@ func (h *ModelHandler) ConfirmBatch(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// ListAll godoc
+// @Summary 管理员：模型列表
+// @Description 获取全部模型列表
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param provider query string false "提供商"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models [get]
 func (h *ModelHandler) ListAll(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -242,6 +342,21 @@ func (h *ModelHandler) ListAll(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
+// BatchPricing godoc
+// @Summary 管理员：批量定价
+// @Description 批量更新模型定价
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body modelPricingRequest true "定价数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models/pricing [post]
 func (h *ModelHandler) BatchPricing(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")
@@ -279,6 +394,19 @@ func (h *ModelHandler) BatchPricing(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// ListAllProviders godoc
+// @Summary 管理员：模型提供商
+// @Description 获取全部模型提供商
+// @Tags 管理-模型
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 403 {object} map[string]interface{} "无权限"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /admin/models/providers [get]
 func (h *ModelHandler) ListAllProviders(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "模型服务未配置")

@@ -22,6 +22,8 @@ import (
 	"deepspace/internal/service/user"
 
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func SetupRoutes(
@@ -46,6 +48,9 @@ func SetupRoutes(
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// Swagger 文档入口
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	// NewAPI Integration
 	newAPIClient := newapi.NewClient(cfg.NewAPIBaseURL, cfg.NewAPIKey)

@@ -37,6 +37,25 @@ func NewProxyHandler(billingSvc *billing.Service, usageSvc *usage.Service, newap
 	return &ProxyHandler{billing: billingSvc, usage: usageSvc, newapi: newapiClient, model: modelSvc, plan: planSvc}
 }
 
+// Handle godoc
+// @Summary 代理 NewAPI
+// @Description 转发 /v1 下的请求到 NewAPI
+// @Tags 代理
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param path path string true "转发路径"
+// @Success 200 {object} map[string]interface{} "代理成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 402 {object} map[string]interface{} "余额不足"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /v1/{path} [get]
+// @Router /v1/{path} [post]
+// @Router /v1/{path} [put]
+// @Router /v1/{path} [patch]
+// @Router /v1/{path} [delete]
 func (h *ProxyHandler) Handle(c *gin.Context) {
 	if h.newapi == nil {
 		respondInternal(c, "newapi client not configured")

@@ -18,6 +18,20 @@ func NewProjectWorkflowHandler(svc *projectworkflow.Service) *ProjectWorkflowHan
 	return &ProjectWorkflowHandler{svc: svc}
 }
 
+// List godoc
+// @Summary 项目工作流列表
+// @Description 获取指定项目的工作流列表
+// @Tags 项目工作流
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/workflows [get]
 func (h *ProjectWorkflowHandler) List(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -46,6 +60,21 @@ type createWorkflowRequest struct {
 	Steps       datatypes.JSON `json:"steps"`
 }
 
+// Create godoc
+// @Summary 创建项目工作流
+// @Description 在指定项目中创建工作流
+// @Tags 项目工作流
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param data body createWorkflowRequest true "工作流数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/workflows [post]
 func (h *ProjectWorkflowHandler) Create(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -84,6 +113,23 @@ type updateWorkflowRequest struct {
 	Steps       *datatypes.JSON `json:"steps"`
 }
 
+// Update godoc
+// @Summary 更新项目工作流
+// @Description 更新指定项目的工作流
+// @Tags 项目工作流
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param workflowId path int true "工作流ID"
+// @Param data body updateWorkflowRequest true "工作流更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "工作流不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/workflows/{workflowId} [patch]
 func (h *ProjectWorkflowHandler) Update(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -131,6 +177,22 @@ func (h *ProjectWorkflowHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+// Delete godoc
+// @Summary 删除项目工作流
+// @Description 删除指定项目的工作流
+// @Tags 项目工作流
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param workflowId path int true "工作流ID"
+// @Success 204 {object} map[string]interface{} "删除成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "工作流不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id}/workflows/{workflowId} [delete]
 func (h *ProjectWorkflowHandler) Delete(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {

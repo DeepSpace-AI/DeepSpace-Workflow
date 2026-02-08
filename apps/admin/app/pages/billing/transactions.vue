@@ -7,7 +7,7 @@
           <UBadge color="neutral" variant="soft">共 {{ totalCount }} 条</UBadge>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <UInput v-model="searchTerm" placeholder="搜索引用ID或组织ID" icon="i-heroicons-magnifying-glass" class="w-64" />
+          <UInput v-model="searchTerm" placeholder="搜索引用ID或用户ID" icon="i-heroicons-magnifying-glass" class="w-64" />
           <USelect v-model="typeFilter" :items="typeOptions" class="w-28" />
           <USelect v-model="pageSize" :items="pageSizeOptions" class="w-24" />
         </div>
@@ -30,7 +30,7 @@ import type { TableColumn } from '@nuxt/ui'
 
 type TransactionRow = {
   id: number
-  org_id: number
+  user_id: number
   type: 'hold' | 'capture' | 'release'
   amount: number
   ref_id: string
@@ -40,7 +40,7 @@ type TransactionRow = {
 const rawItems = ref<TransactionRow[]>([
   {
     id: 90231,
-    org_id: 1001,
+    user_id: 1001,
     type: 'hold',
     amount: 18.5,
     ref_id: 'req_20250201_001',
@@ -48,7 +48,7 @@ const rawItems = ref<TransactionRow[]>([
   },
   {
     id: 90232,
-    org_id: 1001,
+    user_id: 1001,
     type: 'capture',
     amount: 16.8,
     ref_id: 'req_20250201_001',
@@ -56,7 +56,7 @@ const rawItems = ref<TransactionRow[]>([
   },
   {
     id: 90233,
-    org_id: 1003,
+    user_id: 1003,
     type: 'hold',
     amount: 6.2,
     ref_id: 'req_20250115_002',
@@ -64,7 +64,7 @@ const rawItems = ref<TransactionRow[]>([
   },
   {
     id: 90234,
-    org_id: 1003,
+    user_id: 1003,
     type: 'release',
     amount: 1.1,
     ref_id: 'req_20250115_002',
@@ -72,7 +72,7 @@ const rawItems = ref<TransactionRow[]>([
   },
   {
     id: 90235,
-    org_id: 1002,
+    user_id: 1002,
     type: 'capture',
     amount: 12.6,
     ref_id: 'req_20250120_009',
@@ -103,7 +103,7 @@ const filteredItems = computed(() => {
     const matchesKeyword =
       !keyword ||
       item.ref_id.toLowerCase().includes(keyword) ||
-      String(item.org_id).includes(keyword)
+      String(item.user_id).includes(keyword)
     const matchesType = typeFilter.value === 'all' || item.type === typeFilter.value
     return matchesKeyword && matchesType
   })
@@ -136,8 +136,8 @@ const columns = computed<TableColumn<TransactionRow>[]>(() => [
     meta: { class: { th: 'w-28' } }
   },
   {
-    accessorKey: 'org_id',
-    header: '组织ID'
+    accessorKey: 'user_id',
+    header: '用户ID'
   },
   {
     accessorKey: 'type',

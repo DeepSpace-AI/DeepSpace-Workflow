@@ -20,6 +20,18 @@ func NewProjectHandler(svc *project.Service, knowledgeSvc *knowledge.Service) *P
 	return &ProjectHandler{svc: svc, knowledgeSvc: knowledgeSvc}
 }
 
+// List godoc
+// @Summary 项目列表
+// @Description 获取当前用户的项目列表
+// @Tags 项目
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects [get]
 func (h *ProjectHandler) List(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -36,6 +48,21 @@ func (h *ProjectHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
+// Get godoc
+// @Summary 获取项目详情
+// @Description 获取指定项目详情
+// @Tags 项目
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "项目不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id} [get]
 func (h *ProjectHandler) Get(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -68,6 +95,20 @@ type createProjectRequest struct {
 	Type        string  `json:"type"`
 }
 
+// Create godoc
+// @Summary 创建项目
+// @Description 创建新项目
+// @Tags 项目
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body createProjectRequest true "项目数据"
+// @Success 201 {object} map[string]interface{} "创建成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects [post]
 func (h *ProjectHandler) Create(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -96,6 +137,22 @@ type updateProjectRequest struct {
 	Description *string `json:"description"`
 }
 
+// Update godoc
+// @Summary 更新项目
+// @Description 更新项目名称或描述
+// @Tags 项目
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Param data body updateProjectRequest true "项目更新数据"
+// @Success 200 {object} map[string]interface{} "更新成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "项目不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id} [patch]
 func (h *ProjectHandler) Update(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -137,6 +194,21 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+// Delete godoc
+// @Summary 删除项目
+// @Description 删除指定项目
+// @Tags 项目
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param id path int true "项目ID"
+// @Success 204 {object} map[string]interface{} "删除成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 404 {object} map[string]interface{} "项目不存在"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/{id} [delete]
 func (h *ProjectHandler) Delete(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {
@@ -163,6 +235,18 @@ func (h *ProjectHandler) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// Stats godoc
+// @Summary 项目统计
+// @Description 获取项目与资料统计
+// @Tags 项目
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /projects/stats [get]
 func (h *ProjectHandler) Stats(c *gin.Context) {
 	orgID, ok := getUserID(c)
 	if !ok {

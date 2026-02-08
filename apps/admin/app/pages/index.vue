@@ -17,14 +17,14 @@
     <UCard>
       <div class="flex items-center justify-between">
         <div>
-          <div class="text-sm font-medium text-gray-500 dark:text-gray-400">活跃组织</div>
+          <div class="text-sm font-medium text-gray-500 dark:text-gray-400">活跃用户</div>
           <div class="text-3xl font-bold mt-1">56</div>
         </div>
-        <UIcon name="i-heroicons-building-office" class="w-8 h-8 text-blue-500" />
+        <UIcon name="i-heroicons-user-group" class="w-8 h-8 text-blue-500" />
       </div>
       <div class="mt-4 text-sm text-green-500 flex items-center gap-1">
         <UIcon name="i-heroicons-arrow-trending-up" />
-        <span>本周新增 3 个</span>
+        <span>本周新增 3 人</span>
       </div>
     </UCard>
 

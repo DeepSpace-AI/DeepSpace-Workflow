@@ -34,6 +34,20 @@ type enqueueEmailRequest struct {
 	Items []sendEmailRequest `json:"items"`
 }
 
+// Send godoc
+// @Summary 发送邮件
+// @Description 立即发送邮件
+// @Tags 邮件
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body sendEmailRequest true "邮件内容"
+// @Success 200 {object} map[string]interface{} "发送成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /email/send [post]
 func (h *EmailHandler) Send(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "邮件服务未配置")
@@ -84,6 +98,20 @@ func (h *EmailHandler) Send(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
+// Enqueue godoc
+// @Summary 邮件入队
+// @Description 批量邮件入队
+// @Tags 邮件
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body enqueueEmailRequest true "邮件列表"
+// @Success 200 {object} map[string]interface{} "入队成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 401 {object} map[string]interface{} "未登录"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /email/enqueue [post]
 func (h *EmailHandler) Enqueue(c *gin.Context) {
 	if h == nil || h.svc == nil {
 		respondInternal(c, "邮件服务未配置")

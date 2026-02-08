@@ -24,14 +24,58 @@ type billingRequest struct {
 	Metadata map[string]any `json:"metadata"`
 }
 
+// Hold godoc
+// @Summary 预扣余额
+// @Description 预扣用户余额
+// @Tags 计费
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body billingRequest true "预扣信息"
+// @Success 200 {object} map[string]interface{} "预扣成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 402 {object} map[string]interface{} "余额不足"
+// @Failure 409 {object} map[string]interface{} "引用冲突"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /billing/hold [post]
 func (h *BillingHandler) Hold(c *gin.Context) {
 	h.handle(c, h.svc.Hold)
 }
 
+// Capture godoc
+// @Summary 扣减余额
+// @Description 确认扣减预扣余额
+// @Tags 计费
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body billingRequest true "扣减信息"
+// @Success 200 {object} map[string]interface{} "扣减成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 402 {object} map[string]interface{} "余额不足"
+// @Failure 409 {object} map[string]interface{} "引用冲突"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /billing/capture [post]
 func (h *BillingHandler) Capture(c *gin.Context) {
 	h.handle(c, h.svc.Capture)
 }
 
+// Release godoc
+// @Summary 释放预扣
+// @Description 释放已预扣余额
+// @Tags 计费
+// @Accept json
+// @Produce json
+// @Security bearerAuth
+// @Security cookieAuth
+// @Param data body billingRequest true "释放信息"
+// @Success 200 {object} map[string]interface{} "释放成功"
+// @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 409 {object} map[string]interface{} "引用冲突"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /billing/release [post]
 func (h *BillingHandler) Release(c *gin.Context) {
 	h.handle(c, h.svc.Release)
 }

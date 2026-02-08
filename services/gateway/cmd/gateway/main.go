@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"strings"
 
+	docs "deepspace/cmd/gateway/docs"
 	"deepspace/internal/api"
 	"deepspace/internal/api/middleware"
 	"deepspace/internal/config"
@@ -22,12 +22,18 @@ import (
 	"deepspace/internal/service/projectworkflow"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
+	// @title DeepSpace Gateway API
+	// @version 1.0
+	// @description DeepSpace Gateway 接口文档
+	// @BasePath /api
 	log.Println("Starting DeepSpace Gateway...")
 
 	// Load configuration
@@ -89,6 +95,12 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(gin.Logger())
+
+	// Swagger 基础信息
+	docs.SwaggerInfo.Title = "DeepSpace Gateway API"
+	docs.SwaggerInfo.Description = "DeepSpace Gateway 接口文档"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.BasePath = "/api"
 
 	r.Use(middleware.TraceID())
 	r.Use(middleware.ErrorHandler())
