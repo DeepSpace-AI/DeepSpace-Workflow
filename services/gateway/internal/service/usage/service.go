@@ -18,7 +18,7 @@ func New(repo *repo.UsageRepo) *Service {
 }
 
 type ListInput struct {
-	OrgID    int64
+	UserID   int64
 	Start    *time.Time
 	End      *time.Time
 	Page     int
@@ -26,7 +26,7 @@ type ListInput struct {
 }
 
 type RecordInput struct {
-	OrgID            int64
+	UserID           int64
 	ProjectID        *int64
 	Model            string
 	PromptTokens     int
@@ -43,7 +43,7 @@ func (s *Service) Record(ctx context.Context, in RecordInput) error {
 	}
 
 	rec := model.UsageRecord{
-		OrgID:            in.OrgID,
+		UserID:           in.UserID,
 		ProjectID:        in.ProjectID,
 		Model:            modelName,
 		PromptTokens:     in.PromptTokens,
@@ -70,7 +70,7 @@ func (s *Service) List(ctx context.Context, in ListInput) ([]model.UsageRecord, 
 	}
 
 	records, err := s.repo.List(ctx, repo.UsageListFilter{
-		OrgID:  in.OrgID,
+		UserID: in.UserID,
 		Start:  in.Start,
 		End:    in.End,
 		Limit:  pageSize,
@@ -80,7 +80,7 @@ func (s *Service) List(ctx context.Context, in ListInput) ([]model.UsageRecord, 
 		return nil, 0, err
 	}
 
-	total, err := s.repo.Count(ctx, in.OrgID, in.Start, in.End)
+	total, err := s.repo.Count(ctx, in.UserID, in.Start, in.End)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -88,6 +88,6 @@ func (s *Service) List(ctx context.Context, in ListInput) ([]model.UsageRecord, 
 	return records, total, nil
 }
 
-func (s *Service) SumCost(ctx context.Context, orgID int64, start, end *time.Time) (float64, error) {
-	return s.repo.SumCost(ctx, orgID, start, end)
+func (s *Service) SumCost(ctx context.Context, userID int64, start, end *time.Time) (float64, error) {
+	return s.repo.SumCost(ctx, userID, start, end)
 }

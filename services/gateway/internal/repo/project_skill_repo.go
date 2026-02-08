@@ -19,7 +19,7 @@ func NewProjectSkillRepo(db *gorm.DB) *ProjectSkillRepo {
 func (r *ProjectSkillRepo) ListByProject(ctx context.Context, orgID, projectID int64) ([]model.ProjectSkill, error) {
 	var items []model.ProjectSkill
 	err := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ?", orgID, projectID).
+		Where("user_id = ? AND project_id = ?", orgID, projectID).
 		Order("updated_at DESC").
 		Find(&items).Error
 	return items, err
@@ -28,7 +28,7 @@ func (r *ProjectSkillRepo) ListByProject(ctx context.Context, orgID, projectID i
 func (r *ProjectSkillRepo) Get(ctx context.Context, orgID, projectID, skillID int64) (*model.ProjectSkill, error) {
 	var item model.ProjectSkill
 	err := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ? AND id = ?", orgID, projectID, skillID).
+		Where("user_id = ? AND project_id = ? AND id = ?", orgID, projectID, skillID).
 		First(&item).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
@@ -43,7 +43,7 @@ func (r *ProjectSkillRepo) Create(ctx context.Context, item *model.ProjectSkill)
 func (r *ProjectSkillRepo) Update(ctx context.Context, orgID, projectID, skillID int64, updates map[string]any) (*model.ProjectSkill, error) {
 	tx := r.db.WithContext(ctx).
 		Model(&model.ProjectSkill{}).
-		Where("org_id = ? AND project_id = ? AND id = ?", orgID, projectID, skillID).
+		Where("user_id = ? AND project_id = ? AND id = ?", orgID, projectID, skillID).
 		Updates(updates)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -56,7 +56,7 @@ func (r *ProjectSkillRepo) Update(ctx context.Context, orgID, projectID, skillID
 
 func (r *ProjectSkillRepo) Delete(ctx context.Context, orgID, projectID, skillID int64) (bool, error) {
 	tx := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ? AND id = ?", orgID, projectID, skillID).
+		Where("user_id = ? AND project_id = ? AND id = ?", orgID, projectID, skillID).
 		Delete(&model.ProjectSkill{})
 	if tx.Error != nil {
 		return false, tx.Error

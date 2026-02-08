@@ -19,9 +19,9 @@ func NewChatSessionHandler(svc *chat.Service) *ChatSessionHandler {
 }
 
 func (h *ChatSessionHandler) ListConversations(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -45,9 +45,9 @@ type createConversationRequest struct {
 }
 
 func (h *ChatSessionHandler) ListStandaloneConversations(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -61,9 +61,9 @@ func (h *ChatSessionHandler) ListStandaloneConversations(c *gin.Context) {
 }
 
 func (h *ChatSessionHandler) CreateConversation(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -89,9 +89,9 @@ func (h *ChatSessionHandler) CreateConversation(c *gin.Context) {
 }
 
 func (h *ChatSessionHandler) CreateStandaloneConversation(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -111,9 +111,9 @@ func (h *ChatSessionHandler) CreateStandaloneConversation(c *gin.Context) {
 }
 
 func (h *ChatSessionHandler) ListMessages(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -144,9 +144,9 @@ type createMessageRequest struct {
 }
 
 func (h *ChatSessionHandler) CreateMessage(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -186,9 +186,9 @@ type updateConversationRequest struct {
 }
 
 func (h *ChatSessionHandler) UpdateConversation(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -222,9 +222,9 @@ func (h *ChatSessionHandler) UpdateConversation(c *gin.Context) {
 }
 
 func (h *ChatSessionHandler) DeleteConversation(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 

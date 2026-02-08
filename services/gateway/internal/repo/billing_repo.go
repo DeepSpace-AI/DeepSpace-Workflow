@@ -22,11 +22,11 @@ func (r *BillingRepo) WithTx(tx *gorm.DB) *BillingRepo {
 	return &BillingRepo{db: tx}
 }
 
-func (r *BillingRepo) GetWalletForUpdate(ctx context.Context, orgID int64) (*model.Wallet, error) {
+func (r *BillingRepo) GetWalletForUpdate(ctx context.Context, userID int64) (*model.Wallet, error) {
 	var w model.Wallet
 	err := r.db.WithContext(ctx).
 		Clauses(clause.Locking{Strength: "UPDATE"}).
-		Where("org_id = ?", orgID).
+		Where("user_id = ?", userID).
 		First(&w).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -37,10 +37,10 @@ func (r *BillingRepo) GetWalletForUpdate(ctx context.Context, orgID int64) (*mod
 	return &w, nil
 }
 
-func (r *BillingRepo) GetWallet(ctx context.Context, orgID int64) (*model.Wallet, error) {
+func (r *BillingRepo) GetWallet(ctx context.Context, userID int64) (*model.Wallet, error) {
 	var w model.Wallet
 	err := r.db.WithContext(ctx).
-		Where("org_id = ?", orgID).
+		Where("user_id = ?", userID).
 		First(&w).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -51,21 +51,21 @@ func (r *BillingRepo) GetWallet(ctx context.Context, orgID int64) (*model.Wallet
 	return &w, nil
 }
 
-func (r *BillingRepo) CreateWallet(ctx context.Context, orgID int64) (*model.Wallet, error) {
-	wallet := model.Wallet{OrgID: orgID, Balance: 0, FrozenBalance: 0}
+func (r *BillingRepo) CreateWallet(ctx context.Context, userID int64) (*model.Wallet, error) {
+	wallet := model.Wallet{UserID: userID, Balance: 0, FrozenBalance: 0}
 	err := r.db.WithContext(ctx).
 		Clauses(clause.OnConflict{DoNothing: true}).
 		Create(&wallet).Error
 	if err != nil {
 		return nil, err
 	}
-	return r.GetWalletForUpdate(ctx, orgID)
+	return r.GetWalletForUpdate(ctx, userID)
 }
 
-func (r *BillingRepo) UpdateWallet(ctx context.Context, orgID int64, balance, frozen float64) error {
+func (r *BillingRepo) UpdateWallet(ctx context.Context, userID int64, balance, frozen float64) error {
 	return r.db.WithContext(ctx).
 		Model(&model.Wallet{}).
-		Where("org_id = ?", orgID).
+		Where("user_id = ?", userID).
 		Updates(map[string]any{
 			"balance":        balance,
 			"frozen_balance": frozen,
@@ -86,9 +86,9 @@ func (r *BillingRepo) GetTransactionByRef(ctx context.Context, refID string) (*m
 	return &t, nil
 }
 
-func (r *BillingRepo) CreateTransaction(ctx context.Context, orgID int64, typ string, amount float64, refID string, metadata []byte) (*model.Transaction, error) {
+func (r *BillingRepo) CreateTransaction(ctx context.Context, userID int64, typ string, amount float64, refID string, metadata []byte) (*model.Transaction, error) {
 	tr := model.Transaction{
-		OrgID:    orgID,
+		UserID:   userID,
 		Type:     typ,
 		Amount:   amount,
 		RefID:    refID,

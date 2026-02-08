@@ -37,33 +37,33 @@ type CaptureResult = HoldResult
 
 type ReleaseResult = HoldResult
 
-func (s *Service) GetWallet(ctx context.Context, orgID int64) (*model.Wallet, error) {
-	wallet, err := s.repo.GetWallet(ctx, orgID)
+func (s *Service) GetWallet(ctx context.Context, userID int64) (*model.Wallet, error) {
+	wallet, err := s.repo.GetWallet(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	if wallet != nil {
 		return wallet, nil
 	}
-	return s.repo.CreateWallet(ctx, orgID)
+	return s.repo.CreateWallet(ctx, userID)
 }
 
-func (s *Service) Hold(ctx context.Context, orgID int64, amount float64, refID string, metadata map[string]any) (*HoldResult, error) {
+func (s *Service) Hold(ctx context.Context, userID int64, amount float64, refID string, metadata map[string]any) (*HoldResult, error) {
 	if amount <= 0 {
 		return nil, ErrInvalidAmount
 	}
 	return s.withTx(ctx, func(repoTx *repo.BillingRepo) (*HoldResult, error) {
-		if existing, err := s.findExisting(ctx, repoTx, orgID, refID, "hold", amount); err != nil {
+		if existing, err := s.findExisting(ctx, repoTx, userID, refID, "hold", amount); err != nil {
 			return nil, err
 		} else if existing != nil {
-			wallet, err := s.ensureWallet(ctx, repoTx, orgID)
+			wallet, err := s.ensureWallet(ctx, repoTx, userID)
 			if err != nil {
 				return nil, err
 			}
 			return &HoldResult{Wallet: wallet, Transaction: existing}, nil
 		}
 
-		wallet, err := s.ensureWallet(ctx, repoTx, orgID)
+		wallet, err := s.ensureWallet(ctx, repoTx, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func (s *Service) Hold(ctx context.Context, orgID int64, amount float64, refID s
 
 		wallet.Balance -= amount
 		wallet.FrozenBalance += amount
-		if err := repoTx.UpdateWallet(ctx, orgID, wallet.Balance, wallet.FrozenBalance); err != nil {
+		if err := repoTx.UpdateWallet(ctx, userID, wallet.Balance, wallet.FrozenBalance); err != nil {
 			return nil, err
 		}
 
@@ -82,7 +82,7 @@ func (s *Service) Hold(ctx context.Context, orgID int64, amount float64, refID s
 		if err != nil {
 			return nil, err
 		}
-		tr, err := repoTx.CreateTransaction(ctx, orgID, "hold", amount, refID, meta)
+		tr, err := repoTx.CreateTransaction(ctx, userID, "hold", amount, refID, meta)
 		if err != nil {
 			return nil, err
 		}
@@ -91,22 +91,22 @@ func (s *Service) Hold(ctx context.Context, orgID int64, amount float64, refID s
 	})
 }
 
-func (s *Service) Capture(ctx context.Context, orgID int64, amount float64, refID string, metadata map[string]any) (*CaptureResult, error) {
+func (s *Service) Capture(ctx context.Context, userID int64, amount float64, refID string, metadata map[string]any) (*CaptureResult, error) {
 	if amount <= 0 {
 		return nil, ErrInvalidAmount
 	}
 	return s.withTx(ctx, func(repoTx *repo.BillingRepo) (*CaptureResult, error) {
-		if existing, err := s.findExisting(ctx, repoTx, orgID, refID, "capture", amount); err != nil {
+		if existing, err := s.findExisting(ctx, repoTx, userID, refID, "capture", amount); err != nil {
 			return nil, err
 		} else if existing != nil {
-			wallet, err := s.ensureWallet(ctx, repoTx, orgID)
+			wallet, err := s.ensureWallet(ctx, repoTx, userID)
 			if err != nil {
 				return nil, err
 			}
 			return &HoldResult{Wallet: wallet, Transaction: existing}, nil
 		}
 
-		wallet, err := s.ensureWallet(ctx, repoTx, orgID)
+		wallet, err := s.ensureWallet(ctx, repoTx, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +116,7 @@ func (s *Service) Capture(ctx context.Context, orgID int64, amount float64, refI
 		}
 
 		wallet.FrozenBalance -= amount
-		if err := repoTx.UpdateWallet(ctx, orgID, wallet.Balance, wallet.FrozenBalance); err != nil {
+		if err := repoTx.UpdateWallet(ctx, userID, wallet.Balance, wallet.FrozenBalance); err != nil {
 			return nil, err
 		}
 
@@ -124,7 +124,7 @@ func (s *Service) Capture(ctx context.Context, orgID int64, amount float64, refI
 		if err != nil {
 			return nil, err
 		}
-		tr, err := repoTx.CreateTransaction(ctx, orgID, "capture", amount, refID, meta)
+		tr, err := repoTx.CreateTransaction(ctx, userID, "capture", amount, refID, meta)
 		if err != nil {
 			return nil, err
 		}
@@ -133,22 +133,22 @@ func (s *Service) Capture(ctx context.Context, orgID int64, amount float64, refI
 	})
 }
 
-func (s *Service) Release(ctx context.Context, orgID int64, amount float64, refID string, metadata map[string]any) (*ReleaseResult, error) {
+func (s *Service) Release(ctx context.Context, userID int64, amount float64, refID string, metadata map[string]any) (*ReleaseResult, error) {
 	if amount <= 0 {
 		return nil, ErrInvalidAmount
 	}
 	return s.withTx(ctx, func(repoTx *repo.BillingRepo) (*ReleaseResult, error) {
-		if existing, err := s.findExisting(ctx, repoTx, orgID, refID, "release", amount); err != nil {
+		if existing, err := s.findExisting(ctx, repoTx, userID, refID, "release", amount); err != nil {
 			return nil, err
 		} else if existing != nil {
-			wallet, err := s.ensureWallet(ctx, repoTx, orgID)
+			wallet, err := s.ensureWallet(ctx, repoTx, userID)
 			if err != nil {
 				return nil, err
 			}
 			return &HoldResult{Wallet: wallet, Transaction: existing}, nil
 		}
 
-		wallet, err := s.ensureWallet(ctx, repoTx, orgID)
+		wallet, err := s.ensureWallet(ctx, repoTx, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +159,7 @@ func (s *Service) Release(ctx context.Context, orgID int64, amount float64, refI
 
 		wallet.FrozenBalance -= amount
 		wallet.Balance += amount
-		if err := repoTx.UpdateWallet(ctx, orgID, wallet.Balance, wallet.FrozenBalance); err != nil {
+		if err := repoTx.UpdateWallet(ctx, userID, wallet.Balance, wallet.FrozenBalance); err != nil {
 			return nil, err
 		}
 
@@ -167,7 +167,7 @@ func (s *Service) Release(ctx context.Context, orgID int64, amount float64, refI
 		if err != nil {
 			return nil, err
 		}
-		tr, err := repoTx.CreateTransaction(ctx, orgID, "release", amount, refID, meta)
+		tr, err := repoTx.CreateTransaction(ctx, userID, "release", amount, refID, meta)
 		if err != nil {
 			return nil, err
 		}
@@ -193,13 +193,13 @@ func (s *Service) withTx(ctx context.Context, fn func(repoTx *repo.BillingRepo) 
 	return result, nil
 }
 
-func (s *Service) ensureWallet(ctx context.Context, repoTx *repo.BillingRepo, orgID int64) (*model.Wallet, error) {
-	wallet, err := repoTx.GetWalletForUpdate(ctx, orgID)
+func (s *Service) ensureWallet(ctx context.Context, repoTx *repo.BillingRepo, userID int64) (*model.Wallet, error) {
+	wallet, err := repoTx.GetWalletForUpdate(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	if wallet == nil {
-		wallet, err = repoTx.CreateWallet(ctx, orgID)
+		wallet, err = repoTx.CreateWallet(ctx, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -207,7 +207,7 @@ func (s *Service) ensureWallet(ctx context.Context, repoTx *repo.BillingRepo, or
 	return wallet, nil
 }
 
-func (s *Service) findExisting(ctx context.Context, repoTx *repo.BillingRepo, orgID int64, refID, typ string, amount float64) (*model.Transaction, error) {
+func (s *Service) findExisting(ctx context.Context, repoTx *repo.BillingRepo, userID int64, refID, typ string, amount float64) (*model.Transaction, error) {
 	if refID == "" {
 		return nil, fmt.Errorf("ref_id is required")
 	}
@@ -218,7 +218,7 @@ func (s *Service) findExisting(ctx context.Context, repoTx *repo.BillingRepo, or
 	if existing == nil {
 		return nil, nil
 	}
-	if existing.OrgID != orgID {
+	if existing.UserID != userID {
 		return nil, ErrRefConflict
 	}
 	if existing.Type == typ {

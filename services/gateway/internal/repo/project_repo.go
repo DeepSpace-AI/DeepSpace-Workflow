@@ -20,7 +20,7 @@ func NewProjectRepo(db *gorm.DB) *ProjectRepo {
 func (r *ProjectRepo) ListByOrg(ctx context.Context, orgID int64) ([]model.Project, error) {
 	var projects []model.Project
 	if err := r.db.WithContext(ctx).
-		Where("org_id = ?", orgID).
+		Where("user_id = ?", orgID).
 		Order("id DESC").
 		Find(&projects).Error; err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (r *ProjectRepo) ListByOrg(ctx context.Context, orgID int64) ([]model.Proje
 func (r *ProjectRepo) Get(ctx context.Context, orgID, projectID int64) (*model.Project, error) {
 	var project model.Project
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND org_id = ?", projectID, orgID).
+		Where("id = ? AND user_id = ?", projectID, orgID).
 		First(&project).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -44,7 +44,7 @@ func (r *ProjectRepo) Get(ctx context.Context, orgID, projectID int64) (*model.P
 
 func (r *ProjectRepo) Create(ctx context.Context, orgID int64, name string, description *string, projectType string) (*model.Project, error) {
 	project := model.Project{
-		OrgID:       orgID,
+		UserID:      orgID,
 		Name:        name,
 		Type:        projectType,
 		Description: description,
@@ -85,7 +85,7 @@ func (r *ProjectRepo) Update(ctx context.Context, orgID, projectID int64, name *
 
 func (r *ProjectRepo) Delete(ctx context.Context, orgID, projectID int64) (bool, error) {
 	result := r.db.WithContext(ctx).
-		Where("id = ? AND org_id = ?", projectID, orgID).
+		Where("id = ? AND user_id = ?", projectID, orgID).
 		Delete(&model.Project{})
 	if result.Error != nil {
 		return false, result.Error
@@ -97,7 +97,7 @@ func (r *ProjectRepo) CountByOrg(ctx context.Context, orgID int64) (int64, error
 	var count int64
 	if err := r.db.WithContext(ctx).
 		Model(&model.Project{}).
-		Where("org_id = ?", orgID).
+		Where("user_id = ?", orgID).
 		Count(&count).Error; err != nil {
 		return 0, err
 	}

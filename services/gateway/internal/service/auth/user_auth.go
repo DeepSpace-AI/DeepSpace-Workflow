@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
+	"deepspace/internal/model"
 	"deepspace/internal/repo"
 
 	"golang.org/x/crypto/bcrypt"
@@ -17,27 +19,22 @@ var (
 
 type UserAuthService struct {
 	users *repo.UserRepo
-	orgs  *repo.OrgRepo
 	jwt   *JWTManager
 }
 
-func NewUserAuthService(users *repo.UserRepo, orgs *repo.OrgRepo, jwt *JWTManager) *UserAuthService {
-	return &UserAuthService{users: users, orgs: orgs, jwt: jwt}
+func NewUserAuthService(users *repo.UserRepo, jwt *JWTManager) *UserAuthService {
+	return &UserAuthService{users: users, jwt: jwt}
 }
 
 type AuthResult struct {
 	UserID int64
-	OrgID  int64
 	Token  string
 }
 
-func (s *UserAuthService) Register(ctx context.Context, email, password, orgName string) (*AuthResult, error) {
+func (s *UserAuthService) Register(ctx context.Context, email, password string) (*AuthResult, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
 	if email == "" || password == "" {
 		return nil, ErrInvalidCredentials
-	}
-	if orgName == "" {
-		orgName = "Default Org"
 	}
 
 	existing, err := s.users.GetByEmail(ctx, email)
@@ -53,25 +50,22 @@ func (s *UserAuthService) Register(ctx context.Context, email, password, orgName
 		return nil, err
 	}
 
-	user, err := s.users.Create(ctx, email, string(hash))
+	user := &model.User{
+		Email:        email,
+		PasswordHash: string(hash),
+		Status:       "active",
+		Role:         "user",
+	}
+	if err := s.users.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	token, err := s.jwt.Sign(user.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	org, err := s.orgs.Create(ctx, orgName, user.ID)
-	if err != nil {
-		return nil, err
-	}
-	if err := s.orgs.AddMember(ctx, org.ID, user.ID, "owner"); err != nil {
-		return nil, err
-	}
-
-	token, err := s.jwt.Sign(user.ID, org.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AuthResult{UserID: user.ID, OrgID: org.ID, Token: token}, nil
+	return &AuthResult{UserID: user.ID, Token: token}, nil
 }
 
 func (s *UserAuthService) Login(ctx context.Context, email, password string) (*AuthResult, error) {
@@ -88,22 +82,21 @@ func (s *UserAuthService) Login(ctx context.Context, email, password string) (*A
 		return nil, ErrInvalidCredentials
 	}
 
-	orgID := int64(0)
-	org, err := s.orgs.GetByOwner(ctx, user.ID)
+	// Update last login time
+	if err := s.users.UpdateLastLogin(ctx, user.ID, time.Now()); err != nil {
+		// Log error but don't fail login? Or fail?
+		// For now, let's just proceed or log. Since we don't have a logger here, we can ignore or return error.
+		// Returning error might be strict but safe.
+		// Let's ignore it for now to avoid login failure due to non-critical update.
+		// actually, let's just ignore the error for now as it is not critical
+	}
+
+	token, err := s.jwt.Sign(user.ID)
 	if err != nil {
 		return nil, err
 	}
-	if org == nil {
-		return nil, ErrInvalidCredentials
-	}
-	orgID = org.ID
 
-	token, err := s.jwt.Sign(user.ID, orgID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &AuthResult{UserID: user.ID, OrgID: orgID, Token: token}, nil
+	return &AuthResult{UserID: user.ID, Token: token}, nil
 }
 
 func (s *UserAuthService) ChangePassword(ctx context.Context, userID int64, oldPassword, newPassword string) error {

@@ -19,9 +19,9 @@ func NewProjectWorkflowHandler(svc *projectworkflow.Service) *ProjectWorkflowHan
 }
 
 func (h *ProjectWorkflowHandler) List(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -41,15 +41,15 @@ func (h *ProjectWorkflowHandler) List(c *gin.Context) {
 }
 
 type createWorkflowRequest struct {
-	Name        string          `json:"name"`
-	Description *string         `json:"description"`
-	Steps       datatypes.JSON  `json:"steps"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description"`
+	Steps       datatypes.JSON `json:"steps"`
 }
 
 func (h *ProjectWorkflowHandler) Create(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -85,9 +85,9 @@ type updateWorkflowRequest struct {
 }
 
 func (h *ProjectWorkflowHandler) Update(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -132,9 +132,9 @@ func (h *ProjectWorkflowHandler) Update(c *gin.Context) {
 }
 
 func (h *ProjectWorkflowHandler) Delete(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 

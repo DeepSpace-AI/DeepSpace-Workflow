@@ -20,7 +20,7 @@ func NewProjectDocumentRepo(db *gorm.DB) *ProjectDocumentRepo {
 func (r *ProjectDocumentRepo) ListByProject(ctx context.Context, orgID, projectID int64) ([]model.ProjectDocument, error) {
 	var docs []model.ProjectDocument
 	if err := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ?", orgID, projectID).
+		Where("user_id = ? AND project_id = ?", orgID, projectID).
 		Order("updated_at DESC").
 		Find(&docs).Error; err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (r *ProjectDocumentRepo) ListByProject(ctx context.Context, orgID, projectI
 func (r *ProjectDocumentRepo) Get(ctx context.Context, orgID, projectID, docID int64) (*model.ProjectDocument, error) {
 	var doc model.ProjectDocument
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND org_id = ? AND project_id = ?", docID, orgID, projectID).
+		Where("id = ? AND user_id = ? AND project_id = ?", docID, orgID, projectID).
 		First(&doc).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -49,7 +49,7 @@ func (r *ProjectDocumentRepo) Create(ctx context.Context, doc *model.ProjectDocu
 func (r *ProjectDocumentRepo) Update(ctx context.Context, orgID, projectID, docID int64, updates map[string]any) (*model.ProjectDocument, error) {
 	if err := r.db.WithContext(ctx).
 		Model(&model.ProjectDocument{}).
-		Where("id = ? AND org_id = ? AND project_id = ?", docID, orgID, projectID).
+		Where("id = ? AND user_id = ? AND project_id = ?", docID, orgID, projectID).
 		Updates(updates).Error; err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (r *ProjectDocumentRepo) Update(ctx context.Context, orgID, projectID, docI
 
 func (r *ProjectDocumentRepo) Delete(ctx context.Context, orgID, projectID, docID int64) (bool, error) {
 	result := r.db.WithContext(ctx).
-		Where("id = ? AND org_id = ? AND project_id = ?", docID, orgID, projectID).
+		Where("id = ? AND user_id = ? AND project_id = ?", docID, orgID, projectID).
 		Delete(&model.ProjectDocument{})
 	if result.Error != nil {
 		return false, result.Error

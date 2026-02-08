@@ -11,7 +11,7 @@ import (
 
 var (
 	ErrInvalidName = errors.New("invalid name")
-	ErrNoUpdates  = errors.New("no updates")
+	ErrNoUpdates   = errors.New("no updates")
 )
 
 type Service struct {
@@ -24,7 +24,7 @@ func New(repo *repo.ProjectSkillRepo) *Service {
 
 type SkillItem struct {
 	ID          int64   `json:"id"`
-	OrgID       int64   `json:"org_id"`
+	UserID      int64   `json:"user_id"`
 	ProjectID   int64   `json:"project_id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description"`
@@ -33,8 +33,8 @@ type SkillItem struct {
 	UpdatedAt   string  `json:"updated_at"`
 }
 
-func (s *Service) ListByProject(ctx context.Context, orgID, projectID int64) ([]SkillItem, error) {
-	items, err := s.repo.ListByProject(ctx, orgID, projectID)
+func (s *Service) ListByProject(ctx context.Context, userID, projectID int64) ([]SkillItem, error) {
+	items, err := s.repo.ListByProject(ctx, userID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +45,8 @@ func (s *Service) ListByProject(ctx context.Context, orgID, projectID int64) ([]
 	return result, nil
 }
 
-func (s *Service) Get(ctx context.Context, orgID, projectID, skillID int64) (*SkillItem, error) {
-	item, err := s.repo.Get(ctx, orgID, projectID, skillID)
+func (s *Service) Get(ctx context.Context, userID, projectID, skillID int64) (*SkillItem, error) {
+	item, err := s.repo.Get(ctx, userID, projectID, skillID)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +57,12 @@ func (s *Service) Get(ctx context.Context, orgID, projectID, skillID int64) (*Sk
 	return &mapped, nil
 }
 
-func (s *Service) Create(ctx context.Context, orgID, projectID int64, name string, description *string, prompt *string) (*SkillItem, error) {
+func (s *Service) Create(ctx context.Context, userID, projectID int64, name string, description *string, prompt *string) (*SkillItem, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, ErrInvalidName
 	}
 	item := &model.ProjectSkill{
-		OrgID:       orgID,
+		UserID:      userID,
 		ProjectID:   projectID,
 		Name:        strings.TrimSpace(name),
 		Description: description,
@@ -75,7 +75,7 @@ func (s *Service) Create(ctx context.Context, orgID, projectID int64, name strin
 	return &mapped, nil
 }
 
-func (s *Service) Update(ctx context.Context, orgID, projectID, skillID int64, name *string, description *string, prompt *string) (*SkillItem, error) {
+func (s *Service) Update(ctx context.Context, userID, projectID, skillID int64, name *string, description *string, prompt *string) (*SkillItem, error) {
 	updates := map[string]any{}
 	if name != nil {
 		if strings.TrimSpace(*name) == "" {
@@ -92,7 +92,7 @@ func (s *Service) Update(ctx context.Context, orgID, projectID, skillID int64, n
 	if len(updates) == 0 {
 		return nil, ErrNoUpdates
 	}
-	item, err := s.repo.Update(ctx, orgID, projectID, skillID, updates)
+	item, err := s.repo.Update(ctx, userID, projectID, skillID, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -103,14 +103,14 @@ func (s *Service) Update(ctx context.Context, orgID, projectID, skillID int64, n
 	return &mapped, nil
 }
 
-func (s *Service) Delete(ctx context.Context, orgID, projectID, skillID int64) (bool, error) {
-	return s.repo.Delete(ctx, orgID, projectID, skillID)
+func (s *Service) Delete(ctx context.Context, userID, projectID, skillID int64) (bool, error) {
+	return s.repo.Delete(ctx, userID, projectID, skillID)
 }
 
 func mapSkillItem(item *model.ProjectSkill) SkillItem {
 	return SkillItem{
 		ID:          item.ID,
-		OrgID:       item.OrgID,
+		UserID:      item.UserID,
 		ProjectID:   item.ProjectID,
 		Name:        item.Name,
 		Description: item.Description,

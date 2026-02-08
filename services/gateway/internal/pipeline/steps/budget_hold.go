@@ -26,6 +26,6 @@ func (s *BudgetHold) Run(ctx context.Context, state *pipeline.State) error {
 	if state.CostAmount <= 0 || state.RefID == "" {
 		return nil
 	}
-	_, err := s.billing.Hold(ctx, state.OrgID, state.CostAmount, state.RefID, map[string]any{"source": "pipeline"})
+	_, err := s.billing.Hold(ctx, state.UserID, state.CostAmount, state.RefID, map[string]any{"source": "pipeline"})
 	return err
 }

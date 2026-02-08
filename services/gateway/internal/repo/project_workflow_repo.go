@@ -19,7 +19,7 @@ func NewProjectWorkflowRepo(db *gorm.DB) *ProjectWorkflowRepo {
 func (r *ProjectWorkflowRepo) ListByProject(ctx context.Context, orgID, projectID int64) ([]model.ProjectWorkflow, error) {
 	var items []model.ProjectWorkflow
 	err := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ?", orgID, projectID).
+		Where("user_id = ? AND project_id = ?", orgID, projectID).
 		Order("updated_at DESC").
 		Find(&items).Error
 	return items, err
@@ -28,7 +28,7 @@ func (r *ProjectWorkflowRepo) ListByProject(ctx context.Context, orgID, projectI
 func (r *ProjectWorkflowRepo) Get(ctx context.Context, orgID, projectID, workflowID int64) (*model.ProjectWorkflow, error) {
 	var item model.ProjectWorkflow
 	err := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ? AND id = ?", orgID, projectID, workflowID).
+		Where("user_id = ? AND project_id = ? AND id = ?", orgID, projectID, workflowID).
 		First(&item).Error
 	if err == gorm.ErrRecordNotFound {
 		return nil, nil
@@ -43,7 +43,7 @@ func (r *ProjectWorkflowRepo) Create(ctx context.Context, item *model.ProjectWor
 func (r *ProjectWorkflowRepo) Update(ctx context.Context, orgID, projectID, workflowID int64, updates map[string]any) (*model.ProjectWorkflow, error) {
 	tx := r.db.WithContext(ctx).
 		Model(&model.ProjectWorkflow{}).
-		Where("org_id = ? AND project_id = ? AND id = ?", orgID, projectID, workflowID).
+		Where("user_id = ? AND project_id = ? AND id = ?", orgID, projectID, workflowID).
 		Updates(updates)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -56,7 +56,7 @@ func (r *ProjectWorkflowRepo) Update(ctx context.Context, orgID, projectID, work
 
 func (r *ProjectWorkflowRepo) Delete(ctx context.Context, orgID, projectID, workflowID int64) (bool, error) {
 	tx := r.db.WithContext(ctx).
-		Where("org_id = ? AND project_id = ? AND id = ?", orgID, projectID, workflowID).
+		Where("user_id = ? AND project_id = ? AND id = ?", orgID, projectID, workflowID).
 		Delete(&model.ProjectWorkflow{})
 	if tx.Error != nil {
 		return false, tx.Error

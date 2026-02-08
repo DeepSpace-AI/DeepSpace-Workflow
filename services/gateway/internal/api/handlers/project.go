@@ -21,9 +21,9 @@ func NewProjectHandler(svc *project.Service, knowledgeSvc *knowledge.Service) *P
 }
 
 func (h *ProjectHandler) List(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -37,9 +37,9 @@ func (h *ProjectHandler) List(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Get(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -69,9 +69,9 @@ type createProjectRequest struct {
 }
 
 func (h *ProjectHandler) Create(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -97,9 +97,9 @@ type updateProjectRequest struct {
 }
 
 func (h *ProjectHandler) Update(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -138,9 +138,9 @@ func (h *ProjectHandler) Update(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Delete(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -164,9 +164,9 @@ func (h *ProjectHandler) Delete(c *gin.Context) {
 }
 
 func (h *ProjectHandler) Stats(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 

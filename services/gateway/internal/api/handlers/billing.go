@@ -19,9 +19,9 @@ func NewBillingHandler(svc *billing.Service) *BillingHandler {
 }
 
 type billingRequest struct {
-	Amount   float64           `json:"amount"`
-	RefID    string            `json:"ref_id"`
-	Metadata map[string]any    `json:"metadata"`
+	Amount   float64        `json:"amount"`
+	RefID    string         `json:"ref_id"`
+	Metadata map[string]any `json:"metadata"`
 }
 
 func (h *BillingHandler) Hold(c *gin.Context) {
@@ -37,9 +37,9 @@ func (h *BillingHandler) Release(c *gin.Context) {
 }
 
 func (h *BillingHandler) handle(c *gin.Context, op func(ctx context.Context, orgID int64, amount float64, refID string, metadata map[string]any) (*billing.HoldResult, error)) {
-	orgID, ok := getOrgID(c)
+	userID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (h *BillingHandler) handle(c *gin.Context, op func(ctx context.Context, org
 		req.Metadata = map[string]any{}
 	}
 
-	result, err := op(c.Request.Context(), orgID, req.Amount, refID, req.Metadata)
+	result, err := op(c.Request.Context(), userID, req.Amount, refID, req.Metadata)
 	if err != nil {
 		respondBillingError(c, err)
 		return

@@ -6,12 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getOrgID(c *gin.Context) (int64, bool) {
-	value, ok := c.Get("org_id")
-	if !ok {
-		return 0, false
-	}
-
+func castToInt64(value any) (int64, bool) {
 	switch id := value.(type) {
 	case int64:
 		return id, true
@@ -35,6 +30,15 @@ func getOrgID(c *gin.Context) (int64, bool) {
 	default:
 		return 0, false
 	}
+}
+
+func getUserID(c *gin.Context) (int64, bool) {
+	value, ok := c.Get("user_id")
+	if !ok {
+		return 0, false
+	}
+
+	return castToInt64(value)
 }
 
 func respondInternal(c *gin.Context, message string) {

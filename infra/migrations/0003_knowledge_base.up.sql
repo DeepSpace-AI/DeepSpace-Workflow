@@ -5,7 +5,7 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS knowledge_bases (
   id BIGSERIAL PRIMARY KEY,
-  org_id BIGINT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
   scope TEXT NOT NULL CHECK (scope IN ('org', 'project')),
   name TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS knowledge_bases (
 
 CREATE TABLE IF NOT EXISTS knowledge_documents (
   id BIGSERIAL PRIMARY KEY,
-  org_id BIGINT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id BIGINT REFERENCES projects(id) ON DELETE SET NULL,
   knowledge_base_id BIGINT NOT NULL REFERENCES knowledge_bases(id) ON DELETE CASCADE,
   file_name TEXT NOT NULL,
@@ -29,11 +29,11 @@ CREATE TABLE IF NOT EXISTS knowledge_documents (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_knowledge_bases_org_scope_project_created
-  ON knowledge_bases (org_id, scope, project_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_knowledge_bases_user_scope_project_created
+  ON knowledge_bases (user_id, scope, project_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_knowledge_documents_kb_created
   ON knowledge_documents (knowledge_base_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_knowledge_documents_org_project
-  ON knowledge_documents (org_id, project_id);
+CREATE INDEX IF NOT EXISTS idx_knowledge_documents_user_project
+  ON knowledge_documents (user_id, project_id);
 
 COMMIT;

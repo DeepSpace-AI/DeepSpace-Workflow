@@ -18,9 +18,9 @@ func NewProjectDocumentHandler(svc *projectdocument.Service) *ProjectDocumentHan
 }
 
 func (h *ProjectDocumentHandler) List(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -46,9 +46,9 @@ type createDocumentRequest struct {
 }
 
 func (h *ProjectDocumentHandler) Create(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -74,9 +74,9 @@ func (h *ProjectDocumentHandler) Create(c *gin.Context) {
 }
 
 func (h *ProjectDocumentHandler) Get(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -112,9 +112,9 @@ type updateDocumentRequest struct {
 }
 
 func (h *ProjectDocumentHandler) Update(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -159,9 +159,9 @@ func (h *ProjectDocumentHandler) Update(c *gin.Context) {
 }
 
 func (h *ProjectDocumentHandler) Delete(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 

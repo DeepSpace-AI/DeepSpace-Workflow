@@ -1,58 +1,134 @@
-<script setup lang="ts">
-useHead({ title: '用量 - DeepSpace 管理台' })
-
-const usage = [
-  { model: 'gpt-4.1', tokens: '4.2M', cost: '¥ 12,300', trend: '+6%' },
-  { model: 'deepseek-v3', tokens: '3.1M', cost: '¥ 6,480', trend: '+2%' },
-  { model: 'claude-3.5', tokens: '1.8M', cost: '¥ 5,900', trend: '-4%' }
-]
-</script>
-
 <template>
-  <div class="space-y-6">
-    <AdminPageHeader title="用量" description="跟踪模型调用量与成本走势。">
-      <UButton color="neutral" variant="outline" icon="i-lucide-calendar">选择周期</UButton>
-      <UButton color="primary" icon="i-lucide-download">导出报表</UButton>
-    </AdminPageHeader>
-
-    <UCard class="border-black/5">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <p class="text-sm text-slate-500">本月调用</p>
-          <p class="mt-2 text-2xl font-semibold">9.1M</p>
+  <UCard>
+    <template #header>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-semibold">用量记录</h3>
+          <UBadge color="neutral" variant="soft">共 {{ totalCount }} 条</UBadge>
         </div>
-        <div class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <p class="text-sm text-slate-500">平均成本</p>
-          <p class="mt-2 text-2xl font-semibold">¥ 0.23 / 1k</p>
-        </div>
-        <div class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <p class="text-sm text-slate-500">预算利用率</p>
-          <p class="mt-2 text-2xl font-semibold">63%</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <UInput v-model="searchTerm" placeholder="搜索模型或 trace_id" icon="i-heroicons-magnifying-glass" class="w-64" />
+          <USelect v-model="pageSize" :items="pageSizeOptions" class="w-24" />
         </div>
       </div>
+    </template>
 
-      <div class="mt-6 overflow-hidden rounded-xl border border-black/5">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th class="px-3 py-2">模型</th>
-              <th class="px-3 py-2">Token</th>
-              <th class="px-3 py-2">成本</th>
-              <th class="px-3 py-2">趋势</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in usage" :key="row.model" class="border-t border-black/5">
-              <td class="px-3 py-2 font-medium text-slate-900">{{ row.model }}</td>
-              <td class="px-3 py-2">{{ row.tokens }}</td>
-              <td class="px-3 py-2 text-slate-500">{{ row.cost }}</td>
-              <td class="px-3 py-2">
-                <UBadge color="neutral" variant="subtle">{{ row.trend }}</UBadge>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="flex flex-col gap-4">
+      <UTable :data="pagedItems" :columns="columns" />
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-500">共 {{ totalCount }} 条</div>
+        <UPagination v-model:page="page" :total="totalCount" :items-per-page="pageSize" :sibling-count="1" show-edges />
       </div>
-    </UCard>
-  </div>
+    </div>
+  </UCard>
 </template>
+
+<script setup lang="ts">
+import { computed, ref, resolveComponent, watch } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+
+type UsageRow = {
+  model: string
+  total_tokens: number
+  cost: number
+  trace_id: string
+  created_at: string
+}
+
+const rawItems = ref<UsageRow[]>([
+  {
+    model: 'gpt-4.1',
+    total_tokens: 15800,
+    cost: 3.82,
+    trace_id: 'trace_20250201_001',
+    created_at: '2025-02-01T10:22:30Z'
+  },
+  {
+    model: 'gpt-4o-mini',
+    total_tokens: 6200,
+    cost: 0.94,
+    trace_id: 'trace_20250120_009',
+    created_at: '2025-01-20T08:12:08Z'
+  },
+  {
+    model: 'deepseek-r1',
+    total_tokens: 4200,
+    cost: 0.51,
+    trace_id: 'trace_20250115_002',
+    created_at: '2025-01-15T09:31:50Z'
+  },
+  {
+    model: 'qwen2.5-72b',
+    total_tokens: 9600,
+    cost: 2.12,
+    trace_id: 'trace_20250105_777',
+    created_at: '2025-01-05T17:05:00Z'
+  }
+])
+
+const page = ref(1)
+const pageSize = ref(10)
+const searchTerm = ref('')
+
+const pageSizeOptions = [
+  { label: '10 / 页', value: 10 },
+  { label: '20 / 页', value: 20 },
+  { label: '50 / 页', value: 50 }
+]
+
+const filteredItems = computed(() => {
+  const keyword = searchTerm.value.trim().toLowerCase()
+  return rawItems.value.filter((item) => {
+    const matchesKeyword = !keyword || item.model.toLowerCase().includes(keyword) || item.trace_id.toLowerCase().includes(keyword)
+    return matchesKeyword
+  })
+})
+
+const totalCount = computed(() => filteredItems.value.length)
+
+const pagedItems = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filteredItems.value.slice(start, start + pageSize.value)
+})
+
+watch([searchTerm, pageSize], () => {
+  page.value = 1
+})
+
+const UBadge = resolveComponent('UBadge')
+
+const formatAmount = (value: number) => value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+const formatTime = (value: string) => {
+  const time = new Date(value)
+  if (Number.isNaN(time.getTime())) return '—'
+  return time.toLocaleString('zh-CN', { hour12: false })
+}
+
+const columns = computed<TableColumn<UsageRow>[]>(() => [
+  {
+    accessorKey: 'model',
+    header: '模型'
+  },
+  {
+    accessorKey: 'total_tokens',
+    header: '总 Tokens',
+    meta: { class: { td: 'text-right' } },
+    cell: ({ row }) => Number(row.getValue('total_tokens')).toLocaleString('zh-CN')
+  },
+  {
+    accessorKey: 'cost',
+    header: '费用',
+    meta: { class: { td: 'text-right' } },
+    cell: ({ row }) => `$${formatAmount(Number(row.getValue('cost')))}`
+  },
+  {
+    accessorKey: 'trace_id',
+    header: 'Trace ID'
+  },
+  {
+    accessorKey: 'created_at',
+    header: '创建时间',
+    cell: ({ row }) => formatTime(String(row.getValue('created_at')))
+  }
+])
+</script>

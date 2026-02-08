@@ -19,9 +19,9 @@ func NewKnowledgeHandler(svc *knowledge.Service) *KnowledgeHandler {
 }
 
 func (h *KnowledgeHandler) ListBases(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -57,9 +57,9 @@ type createKnowledgeBaseRequest struct {
 }
 
 func (h *KnowledgeHandler) CreateBase(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -87,9 +87,9 @@ func (h *KnowledgeHandler) CreateBase(c *gin.Context) {
 }
 
 func (h *KnowledgeHandler) GetBase(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -118,9 +118,9 @@ type updateKnowledgeBaseRequest struct {
 }
 
 func (h *KnowledgeHandler) UpdateBase(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -154,9 +154,9 @@ func (h *KnowledgeHandler) UpdateBase(c *gin.Context) {
 }
 
 func (h *KnowledgeHandler) DeleteBase(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -180,9 +180,9 @@ func (h *KnowledgeHandler) DeleteBase(c *gin.Context) {
 }
 
 func (h *KnowledgeHandler) ListDocuments(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -202,9 +202,9 @@ func (h *KnowledgeHandler) ListDocuments(c *gin.Context) {
 }
 
 func (h *KnowledgeHandler) CreateDocument(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -268,9 +268,9 @@ func (h *KnowledgeHandler) CreateDocument(c *gin.Context) {
 }
 
 func (h *KnowledgeHandler) DeleteDocument(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -300,9 +300,9 @@ func (h *KnowledgeHandler) DeleteDocument(c *gin.Context) {
 }
 
 func (h *KnowledgeHandler) DownloadDocument(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 

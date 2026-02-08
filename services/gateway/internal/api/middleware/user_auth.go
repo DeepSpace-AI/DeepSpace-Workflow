@@ -59,7 +59,7 @@ func UserAuth(jwtManager *auth.JWTManager) gin.HandlerFunc {
 		}
 
 		c.Set("user_id", claims.UserID)
-		c.Set("org_id", claims.OrgID)
+		c.Set("org_id", claims.UserID)
 		c.Next()
 	}
 }

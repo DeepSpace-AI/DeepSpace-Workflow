@@ -27,7 +27,7 @@ func (r *KnowledgeRepo) ListBases(ctx context.Context, orgID int64, scope string
 		Table("knowledge_bases").
 		Select("knowledge_bases.*, COUNT(knowledge_documents.id) AS doc_count").
 		Joins("LEFT JOIN knowledge_documents ON knowledge_documents.knowledge_base_id = knowledge_bases.id").
-		Where("knowledge_bases.org_id = ?", orgID).
+		Where("knowledge_bases.user_id = ?", orgID).
 		Group("knowledge_bases.id").
 		Order("knowledge_bases.created_at DESC")
 
@@ -59,7 +59,7 @@ func (r *KnowledgeRepo) ListBases(ctx context.Context, orgID int64, scope string
 func (r *KnowledgeRepo) GetBase(ctx context.Context, orgID, id int64) (*model.KnowledgeBase, error) {
 	var base model.KnowledgeBase
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND org_id = ?", id, orgID).
+		Where("id = ? AND user_id = ?", id, orgID).
 		First(&base).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -80,7 +80,7 @@ func (r *KnowledgeRepo) UpdateBase(ctx context.Context, orgID, id int64, updates
 	}
 	err := r.db.WithContext(ctx).
 		Model(&model.KnowledgeBase{}).
-		Where("id = ? AND org_id = ?", id, orgID).
+		Where("id = ? AND user_id = ?", id, orgID).
 		Updates(updates).Error
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (r *KnowledgeRepo) UpdateBase(ctx context.Context, orgID, id int64, updates
 
 func (r *KnowledgeRepo) DeleteBase(ctx context.Context, orgID, id int64) (bool, error) {
 	result := r.db.WithContext(ctx).
-		Where("id = ? AND org_id = ?", id, orgID).
+		Where("id = ? AND user_id = ?", id, orgID).
 		Delete(&model.KnowledgeBase{})
 	if result.Error != nil {
 		return false, result.Error
@@ -101,7 +101,7 @@ func (r *KnowledgeRepo) DeleteBase(ctx context.Context, orgID, id int64) (bool, 
 func (r *KnowledgeRepo) ListDocuments(ctx context.Context, orgID, kbID int64) ([]model.KnowledgeDocument, error) {
 	var docs []model.KnowledgeDocument
 	if err := r.db.WithContext(ctx).
-		Where("knowledge_base_id = ? AND org_id = ?", kbID, orgID).
+		Where("knowledge_base_id = ? AND user_id = ?", kbID, orgID).
 		Order("created_at DESC").
 		Find(&docs).Error; err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (r *KnowledgeRepo) CreateDocument(ctx context.Context, doc *model.Knowledge
 func (r *KnowledgeRepo) DeleteDocument(ctx context.Context, orgID, kbID, docID int64) (*model.KnowledgeDocument, error) {
 	var doc model.KnowledgeDocument
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND knowledge_base_id = ? AND org_id = ?", docID, kbID, orgID).
+		Where("id = ? AND knowledge_base_id = ? AND user_id = ?", docID, kbID, orgID).
 		First(&doc).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -134,7 +134,7 @@ func (r *KnowledgeRepo) DeleteDocument(ctx context.Context, orgID, kbID, docID i
 func (r *KnowledgeRepo) GetDocument(ctx context.Context, orgID, kbID, docID int64) (*model.KnowledgeDocument, error) {
 	var doc model.KnowledgeDocument
 	err := r.db.WithContext(ctx).
-		Where("id = ? AND knowledge_base_id = ? AND org_id = ?", docID, kbID, orgID).
+		Where("id = ? AND knowledge_base_id = ? AND user_id = ?", docID, kbID, orgID).
 		First(&doc).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -149,7 +149,7 @@ func (r *KnowledgeRepo) CountDocumentsByOrg(ctx context.Context, orgID int64) (i
 	var count int64
 	if err := r.db.WithContext(ctx).
 		Model(&model.KnowledgeDocument{}).
-		Where("org_id = ?", orgID).
+		Where("user_id = ?", orgID).
 		Count(&count).Error; err != nil {
 		return 0, err
 	}

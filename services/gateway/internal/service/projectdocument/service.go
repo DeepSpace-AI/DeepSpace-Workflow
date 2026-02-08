@@ -34,8 +34,8 @@ type DocumentItem struct {
 	UpdatedAt string   `json:"updated_at"`
 }
 
-func (s *Service) ListByProject(ctx context.Context, orgID, projectID int64) ([]DocumentItem, error) {
-	items, err := s.repo.ListByProject(ctx, orgID, projectID)
+func (s *Service) ListByProject(ctx context.Context, userID, projectID int64) ([]DocumentItem, error) {
+	items, err := s.repo.ListByProject(ctx, userID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (s *Service) ListByProject(ctx context.Context, orgID, projectID int64) ([]
 	return result, nil
 }
 
-func (s *Service) Get(ctx context.Context, orgID, projectID, docID int64) (*DocumentItem, error) {
-	item, err := s.repo.Get(ctx, orgID, projectID, docID)
+func (s *Service) Get(ctx context.Context, userID, projectID, docID int64) (*DocumentItem, error) {
+	item, err := s.repo.Get(ctx, userID, projectID, docID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *Service) Get(ctx context.Context, orgID, projectID, docID int64) (*Docu
 	return &result, nil
 }
 
-func (s *Service) Create(ctx context.Context, orgID, projectID int64, title string, content string, tags []string) (*DocumentItem, error) {
+func (s *Service) Create(ctx context.Context, userID, projectID int64, title string, content string, tags []string) (*DocumentItem, error) {
 	title = strings.TrimSpace(title)
 	if title == "" {
 		title = "未命名文档"
@@ -69,7 +69,7 @@ func (s *Service) Create(ctx context.Context, orgID, projectID int64, title stri
 	tagJSON, _ := json.Marshal(normalizedTags)
 
 	doc := &model.ProjectDocument{
-		OrgID:     orgID,
+		UserID:    userID,
 		ProjectID: projectID,
 		Title:     title,
 		Content:   content,
@@ -84,7 +84,7 @@ func (s *Service) Create(ctx context.Context, orgID, projectID int64, title stri
 	return &result, nil
 }
 
-func (s *Service) Update(ctx context.Context, orgID, projectID, docID int64, title *string, content *string, tags *[]string) (*DocumentItem, error) {
+func (s *Service) Update(ctx context.Context, userID, projectID, docID int64, title *string, content *string, tags *[]string) (*DocumentItem, error) {
 	updates := map[string]any{}
 
 	if title != nil {
@@ -107,7 +107,7 @@ func (s *Service) Update(ctx context.Context, orgID, projectID, docID int64, tit
 		return nil, ErrNoUpdates
 	}
 
-	item, err := s.repo.Update(ctx, orgID, projectID, docID, updates)
+	item, err := s.repo.Update(ctx, userID, projectID, docID, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +118,8 @@ func (s *Service) Update(ctx context.Context, orgID, projectID, docID int64, tit
 	return &result, nil
 }
 
-func (s *Service) Delete(ctx context.Context, orgID, projectID, docID int64) (bool, error) {
-	return s.repo.Delete(ctx, orgID, projectID, docID)
+func (s *Service) Delete(ctx context.Context, userID, projectID, docID int64) (bool, error) {
+	return s.repo.Delete(ctx, userID, projectID, docID)
 }
 
 func mapDocumentItem(doc *model.ProjectDocument) DocumentItem {

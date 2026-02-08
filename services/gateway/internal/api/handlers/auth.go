@@ -21,7 +21,6 @@ func NewAuthHandler(svc *auth.UserAuthService, jwt *auth.JWTManager) *AuthHandle
 type registerRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	OrgName  string `json:"org_name"`
 }
 
 type loginRequest struct {
@@ -36,7 +35,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	result, err := h.svc.Register(c.Request.Context(), req.Email, req.Password, req.OrgName)
+	result, err := h.svc.Register(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		switch err {
 		case auth.ErrEmailTaken:
@@ -52,7 +51,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	setAuthCookie(c, h.jwt.CookieName, result.Token, h.jwt.ExpiresIn, h.jwt)
-	c.JSON(http.StatusCreated, gin.H{"user_id": result.UserID, "org_id": result.OrgID})
+	c.JSON(http.StatusCreated, gin.H{"user_id": result.UserID})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -75,7 +74,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	setAuthCookie(c, h.jwt.CookieName, result.Token, h.jwt.ExpiresIn, h.jwt)
-	c.JSON(http.StatusOK, gin.H{"user_id": result.UserID, "org_id": result.OrgID})
+	c.JSON(http.StatusOK, gin.H{"user_id": result.UserID})
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -85,10 +84,8 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 func (h *AuthHandler) Me(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	orgID, _ := c.Get("org_id")
 	c.JSON(http.StatusOK, gin.H{
 		"user_id": userID,
-		"org_id":  orgID,
 	})
 }
 

@@ -33,6 +33,19 @@ type Config struct {
 	KBStoragePath string
 	KBMaxUploadMB int
 	KBAllowedMIME []string
+
+	EmailEnabled     bool
+	EmailFromName    string
+	EmailFromAddress string
+	SMTPHost         string
+	SMTPPort         int
+	SMTPUser         string
+	SMTPPassword     string
+	SMTPUseTLS       bool
+	EmailTemplateDir string
+	RedisEnabled     bool
+	RedisURL         string
+	RedisQueueKey    string
 }
 
 func Load() *Config {
@@ -67,6 +80,20 @@ func Load() *Config {
 		KBStoragePath: getEnv("KB_STORAGE_PATH", "./data/kb"),
 		KBMaxUploadMB: getEnvInt("KB_MAX_UPLOAD_MB", 25),
 		KBAllowedMIME: parseCommaList(getEnv("KB_ALLOWED_MIME", "")),
+
+		EmailEnabled:     getEnvBool("EMAIL_ENABLED", false),
+		EmailFromName:    getEnv("EMAIL_FROM_NAME", "DeepSpace"),
+		EmailFromAddress: getEnv("EMAIL_FROM_ADDRESS", ""),
+		SMTPHost:         getEnv("SMTP_HOST", ""),
+		SMTPPort:         getEnvInt("SMTP_PORT", 587),
+		SMTPUser:         getEnv("SMTP_USER", ""),
+		SMTPPassword:     getEnv("SMTP_PASSWORD", ""),
+		SMTPUseTLS:       getEnvBool("SMTP_USE_TLS", true),
+		EmailTemplateDir: getEnv("EMAIL_TEMPLATE_DIR", "../../templates"),
+
+		RedisEnabled:  getEnvBool("REDIS_ENABLED", false),
+		RedisURL:      getEnv("REDIS_URL", ""),
+		RedisQueueKey: getEnv("REDIS_QUEUE_KEY", "email:queue"),
 	}
 }
 
@@ -129,6 +156,25 @@ func (c *Config) Validate() error {
 	}
 	if c.KBMaxUploadMB <= 0 {
 		return fmt.Errorf("KB_MAX_UPLOAD_MB must be positive")
+	}
+	if c.EmailEnabled {
+		if strings.TrimSpace(c.EmailFromAddress) == "" {
+			return fmt.Errorf("EMAIL_FROM_ADDRESS is required")
+		}
+		if strings.TrimSpace(c.SMTPHost) == "" {
+			return fmt.Errorf("SMTP_HOST is required")
+		}
+		if c.SMTPPort <= 0 {
+			return fmt.Errorf("SMTP_PORT must be positive")
+		}
+	}
+	if c.RedisEnabled {
+		if strings.TrimSpace(c.RedisURL) == "" {
+			return fmt.Errorf("REDIS_URL is required")
+		}
+		if strings.TrimSpace(c.RedisQueueKey) == "" {
+			return fmt.Errorf("REDIS_QUEUE_KEY is required")
+		}
 	}
 	return nil
 }

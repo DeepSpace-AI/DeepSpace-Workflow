@@ -1,31 +1,26 @@
-<script setup lang="ts">
-useHead({ title: '定价 - DeepSpace 管理台' })
-
-const plans = [
-  { name: '研究版', tokens: '500k', price: '¥ 1,280/月', status: '启用' },
-  { name: '企业版', tokens: '2M', price: '¥ 4,800/月', status: '启用' },
-  { name: '自定义', tokens: '不限', price: '议价', status: '草稿' }
-]
-</script>
-
 <template>
-  <div class="space-y-6">
-    <AdminPageHeader title="定价" description="统一维护套餐、计费规则与折扣策略。">
-      <UButton color="neutral" variant="outline" icon="i-lucide-file-text">导出配置</UButton>
-      <UButton color="primary" icon="i-lucide-tag">新增套餐</UButton>
-    </AdminPageHeader>
-
-    <UCard class="border-black/5">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div v-for="plan in plans" :key="plan.name" class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <div class="flex items-center justify-between">
-            <p class="text-base font-semibold text-slate-900">{{ plan.name }}</p>
-            <UBadge color="neutral" variant="subtle">{{ plan.status }}</UBadge>
-          </div>
-          <p class="mt-2 text-sm text-slate-500">额度：{{ plan.tokens }}</p>
-          <p class="mt-1 text-lg font-semibold">{{ plan.price }}</p>
+  <UCard>
+    <template #header>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-semibold">套餐管理</h3>
+          <UBadge color="neutral" variant="soft">规划中</UBadge>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <UButton icon="i-heroicons-plus" label="新建套餐" color="primary" :disabled="true" />
         </div>
       </div>
-    </UCard>
-  </div>
+    </template>
+
+    <div class="py-12">
+      <UEmpty icon="i-heroicons-archive-box" title="套餐管理正在建设" description="后续将支持套餐配置、价格分层与上架管理。">
+        <template #actions>
+          <div class="flex items-center gap-2">
+            <UButton color="primary" label="新建套餐" icon="i-heroicons-plus" :disabled="true" />
+            <UButton color="neutral" variant="soft" label="查看模型管理" icon="i-heroicons-cpu-chip" to="/models" />
+          </div>
+        </template>
+      </UEmpty>
+    </div>
+  </UCard>
 </template>

@@ -38,8 +38,8 @@ type MessageItem struct {
 	CreatedAt      string  `json:"created_at"`
 }
 
-func (s *Service) ListConversations(ctx context.Context, orgID, projectID int64) ([]ConversationItem, error) {
-	items, err := s.repo.ListConversations(ctx, orgID, projectID)
+func (s *Service) ListConversations(ctx context.Context, userID, projectID int64) ([]ConversationItem, error) {
+	items, err := s.repo.ListConversations(ctx, userID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +58,8 @@ func (s *Service) ListConversations(ctx context.Context, orgID, projectID int64)
 	return result, nil
 }
 
-func (s *Service) ListStandaloneConversations(ctx context.Context, orgID int64) ([]ConversationItem, error) {
-	items, err := s.repo.ListStandaloneConversations(ctx, orgID)
+func (s *Service) ListStandaloneConversations(ctx context.Context, userID int64) ([]ConversationItem, error) {
+	items, err := s.repo.ListStandaloneConversations(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +77,13 @@ func (s *Service) ListStandaloneConversations(ctx context.Context, orgID int64) 
 	return result, nil
 }
 
-func (s *Service) CreateConversation(ctx context.Context, orgID, projectID int64, title *string) (*ConversationItem, error) {
+func (s *Service) CreateConversation(ctx context.Context, userID, projectID int64, title *string) (*ConversationItem, error) {
 	if title != nil {
 		value := strings.TrimSpace(*title)
 		title = &value
 	}
 
-	item, err := s.repo.CreateConversation(ctx, orgID, projectID, title)
+	item, err := s.repo.CreateConversation(ctx, userID, projectID, title)
 	if err != nil {
 		return nil, err
 	}
@@ -98,13 +98,13 @@ func (s *Service) CreateConversation(ctx context.Context, orgID, projectID int64
 	}, nil
 }
 
-func (s *Service) CreateStandaloneConversation(ctx context.Context, orgID int64, title *string) (*ConversationItem, error) {
+func (s *Service) CreateStandaloneConversation(ctx context.Context, userID int64, title *string) (*ConversationItem, error) {
 	if title != nil {
 		value := strings.TrimSpace(*title)
 		title = &value
 	}
 
-	item, err := s.repo.CreateStandaloneConversation(ctx, orgID, title)
+	item, err := s.repo.CreateStandaloneConversation(ctx, userID, title)
 	if err != nil {
 		return nil, err
 	}
@@ -117,8 +117,8 @@ func (s *Service) CreateStandaloneConversation(ctx context.Context, orgID int64,
 		UpdatedAt: item.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
 }
-func (s *Service) ListMessages(ctx context.Context, orgID, conversationID int64) ([]MessageItem, error) {
-	conv, err := s.repo.GetConversation(ctx, orgID, conversationID)
+func (s *Service) ListMessages(ctx context.Context, userID, conversationID int64) ([]MessageItem, error) {
+	conv, err := s.repo.GetConversation(ctx, userID, conversationID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (s *Service) ListMessages(ctx context.Context, orgID, conversationID int64)
 	return result, nil
 }
 
-func (s *Service) CreateMessage(ctx context.Context, orgID, conversationID int64, role, content string, modelName, traceID *string) (*MessageItem, error) {
-	conv, err := s.repo.GetConversation(ctx, orgID, conversationID)
+func (s *Service) CreateMessage(ctx context.Context, userID, conversationID int64, role, content string, modelName, traceID *string) (*MessageItem, error) {
+	conv, err := s.repo.GetConversation(ctx, userID, conversationID)
 	if err != nil {
 		return nil, err
 	}
@@ -178,13 +178,13 @@ func (s *Service) CreateMessage(ctx context.Context, orgID, conversationID int64
 	}, nil
 }
 
-func (s *Service) UpdateConversation(ctx context.Context, orgID, conversationID int64, title string) (*ConversationItem, error) {
+func (s *Service) UpdateConversation(ctx context.Context, userID, conversationID int64, title string) (*ConversationItem, error) {
 	title = strings.TrimSpace(title)
 	if title == "" {
 		return nil, ErrInvalidTitle
 	}
 
-	item, err := s.repo.UpdateConversationTitle(ctx, orgID, conversationID, title)
+	item, err := s.repo.UpdateConversationTitle(ctx, userID, conversationID, title)
 	if err != nil {
 		return nil, err
 	}
@@ -201,6 +201,6 @@ func (s *Service) UpdateConversation(ctx context.Context, orgID, conversationID 
 	}, nil
 }
 
-func (s *Service) DeleteConversation(ctx context.Context, orgID, conversationID int64) (bool, error) {
-	return s.repo.DeleteConversation(ctx, orgID, conversationID)
+func (s *Service) DeleteConversation(ctx context.Context, userID, conversationID int64) (bool, error) {
+	return s.repo.DeleteConversation(ctx, userID, conversationID)
 }

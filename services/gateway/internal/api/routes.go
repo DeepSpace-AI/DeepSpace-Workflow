@@ -10,7 +10,10 @@ import (
 	"deepspace/internal/service/auth"
 	"deepspace/internal/service/billing"
 	"deepspace/internal/service/chat"
+	"deepspace/internal/service/email"
 	"deepspace/internal/service/knowledge"
+	modelservice "deepspace/internal/service/model"
+	planservice "deepspace/internal/service/plan"
 	"deepspace/internal/service/project"
 	"deepspace/internal/service/projectdocument"
 	"deepspace/internal/service/projectskill"
@@ -28,7 +31,10 @@ func SetupRoutes(
 	usageService *usage.Service,
 	projectService *project.Service,
 	chatService *chat.Service,
+	emailService *email.Service,
 	knowledgeService *knowledge.Service,
+	modelService *modelservice.Service,
+	planService *planservice.Service,
 	projectDocumentService *projectdocument.Service,
 	projectSkillService *projectskill.Service,
 	projectWorkflowService *projectworkflow.Service,
@@ -46,10 +52,14 @@ func SetupRoutes(
 
 	billingHandler := handlers.NewBillingHandler(billingService)
 	billingViewHandler := handlers.NewBillingViewHandler(billingService, usageService)
-	proxyHandler := handlers.NewProxyHandler(billingService, usageService, newAPIClient)
+	proxyHandler := handlers.NewProxyHandler(billingService, usageService, newAPIClient, modelService, planService)
 	projectHandler := handlers.NewProjectHandler(projectService, knowledgeService)
 	chatHandler := handlers.NewChatSessionHandler(chatService)
+	emailHandler := handlers.NewEmailHandler(emailService)
 	knowledgeHandler := handlers.NewKnowledgeHandler(knowledgeService)
+	modelHandler := handlers.NewModelHandler(modelService, newAPIClient)
+	planHandler := handlers.NewPlanHandler(planService)
+	planSubscriptionHandler := handlers.NewPlanSubscriptionHandler(planService)
 	projectDocumentHandler := handlers.NewProjectDocumentHandler(projectDocumentService)
 	projectSkillHandler := handlers.NewProjectSkillHandler(projectSkillService)
 	projectWorkflowHandler := handlers.NewProjectWorkflowHandler(projectWorkflowService)
@@ -111,6 +121,35 @@ func SetupRoutes(
 		protected.GET("/users/me", userHandler.GetMe)
 		protected.PATCH("/users/me", userHandler.UpdateMe)
 		protected.POST("/users/me/password", userHandler.ChangePassword)
+		protected.POST("/email/send", emailHandler.Send)
+		protected.POST("/email/enqueue", emailHandler.Enqueue)
+		protected.GET("/models", modelHandler.List)
+		protected.GET("/models/providers", modelHandler.ListProviders)
+
+		// Admin User Management
+		admin := protected.Group("/admin")
+		admin.Use(middleware.RequireAdmin(userService))
+		{
+			admin.GET("/users", userHandler.List)
+			admin.POST("/users", userHandler.Create)
+			admin.GET("/users/:id", userHandler.Get)
+			admin.PATCH("/users/:id", userHandler.Update)
+			admin.DELETE("/users/:id", userHandler.Delete)
+
+			admin.POST("/models/sync", modelHandler.Sync)
+			admin.POST("/models/confirm", modelHandler.ConfirmBatch)
+			admin.GET("/models", modelHandler.ListAll)
+			admin.GET("/models/providers", modelHandler.ListAllProviders)
+			admin.POST("/models/pricing", modelHandler.BatchPricing)
+			admin.POST("/models", modelHandler.Create)
+			admin.PATCH("/models/:id", modelHandler.Update)
+			admin.GET("/plans", planHandler.List)
+			admin.POST("/plans", planHandler.Create)
+			admin.PATCH("/plans/:id", planHandler.Update)
+			admin.POST("/subscriptions", planSubscriptionHandler.Create)
+			admin.PATCH("/subscriptions/:id", planSubscriptionHandler.Update)
+			admin.GET("/users/:id/subscription", planSubscriptionHandler.GetOrgActive)
+		}
 	}
 
 	// Group for AI models (Standard OpenAI format)

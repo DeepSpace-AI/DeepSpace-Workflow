@@ -1,58 +1,125 @@
-<script setup lang="ts">
-useHead({ title: '钱包 - DeepSpace 管理台' })
-
-const wallets = [
-  { org: '星曜实验室', balance: '¥ 42,300', frozen: '¥ 4,800', status: '正常' },
-  { org: '深空研究院', balance: '¥ 12,600', frozen: '¥ 1,200', status: '预警' },
-  { org: '云渡团队', balance: '¥ 1,900', frozen: '¥ 0', status: '冻结' }
-]
-</script>
-
 <template>
-  <div class="space-y-6">
-    <AdminPageHeader title="钱包" description="查看组织余额、冻结额度与充值记录。">
-      <UButton color="neutral" variant="outline" icon="i-lucide-download">导出账单</UButton>
-      <UButton color="primary" icon="i-lucide-wallet">充值</UButton>
-    </AdminPageHeader>
-
-    <UCard class="border-black/5">
-      <div class="grid gap-4 md:grid-cols-3">
-        <div class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <p class="text-sm text-slate-500">平台余额</p>
-          <p class="mt-2 text-2xl font-semibold">¥ 1,203,900</p>
+  <UCard>
+    <template #header>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-semibold">钱包管理</h3>
+          <UBadge color="neutral" variant="soft">共 {{ totalCount }} 条</UBadge>
         </div>
-        <div class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <p class="text-sm text-slate-500">冻结额度</p>
-          <p class="mt-2 text-2xl font-semibold">¥ 128,400</p>
-        </div>
-        <div class="rounded-xl border border-black/5 bg-slate-50 p-4">
-          <p class="text-sm text-slate-500">当日充值</p>
-          <p class="mt-2 text-2xl font-semibold">¥ 24,000</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <UInput v-model="searchTerm" placeholder="搜索组织ID" icon="i-heroicons-magnifying-glass" class="w-60" />
+          <USelect v-model="pageSize" :items="pageSizeOptions" class="w-24" />
         </div>
       </div>
+    </template>
 
-      <div class="mt-6 overflow-hidden rounded-xl border border-black/5">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th class="px-3 py-2">组织</th>
-              <th class="px-3 py-2">余额</th>
-              <th class="px-3 py-2">冻结</th>
-              <th class="px-3 py-2">状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="wallet in wallets" :key="wallet.org" class="border-t border-black/5">
-              <td class="px-3 py-2 font-medium text-slate-900">{{ wallet.org }}</td>
-              <td class="px-3 py-2">{{ wallet.balance }}</td>
-              <td class="px-3 py-2 text-slate-500">{{ wallet.frozen }}</td>
-              <td class="px-3 py-2">
-                <UBadge color="neutral" variant="subtle">{{ wallet.status }}</UBadge>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="flex flex-col gap-4">
+      <UTable :data="pagedItems" :columns="columns" />
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-500">共 {{ totalCount }} 条</div>
+        <UPagination v-model:page="page" :total="totalCount" :items-per-page="pageSize" :sibling-count="1" show-edges />
       </div>
-    </UCard>
-  </div>
+    </div>
+  </UCard>
 </template>
+
+<script setup lang="ts">
+import { computed, ref, resolveComponent, watch } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
+
+type WalletRow = {
+  org_id: number
+  balance: number
+  frozen_balance: number
+  updated_at: string
+}
+
+const rawItems = ref<WalletRow[]>([
+  {
+    org_id: 1001,
+    balance: 1280.5,
+    frozen_balance: 120,
+    updated_at: '2025-02-01T10:20:00Z'
+  },
+  {
+    org_id: 1002,
+    balance: 320.12,
+    frozen_balance: 0,
+    updated_at: '2025-01-20T08:10:00Z'
+  },
+  {
+    org_id: 1003,
+    balance: 58.9,
+    frozen_balance: 12.5,
+    updated_at: '2025-01-15T09:30:00Z'
+  },
+  {
+    org_id: 1004,
+    balance: 860.75,
+    frozen_balance: 42,
+    updated_at: '2025-01-05T17:05:00Z'
+  }
+])
+
+const page = ref(1)
+const pageSize = ref(10)
+const searchTerm = ref('')
+
+const pageSizeOptions = [
+  { label: '10 / 页', value: 10 },
+  { label: '20 / 页', value: 20 },
+  { label: '50 / 页', value: 50 }
+]
+
+const filteredItems = computed(() => {
+  const keyword = searchTerm.value.trim()
+  return rawItems.value.filter((item) => {
+    return !keyword || String(item.org_id).includes(keyword)
+  })
+})
+
+const totalCount = computed(() => filteredItems.value.length)
+
+const pagedItems = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return filteredItems.value.slice(start, start + pageSize.value)
+})
+
+watch([searchTerm, pageSize], () => {
+  page.value = 1
+})
+
+const UBadge = resolveComponent('UBadge')
+
+const formatAmount = (value: number) => value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 6 })
+const formatTime = (value: string) => {
+  const time = new Date(value)
+  if (Number.isNaN(time.getTime())) return '—'
+  return time.toLocaleString('zh-CN', { hour12: false })
+}
+
+const columns = computed<TableColumn<WalletRow>[]>(() => [
+  {
+    accessorKey: 'org_id',
+    header: '组织ID',
+    meta: { class: { th: 'w-28' } }
+  },
+  {
+    accessorKey: 'balance',
+    header: '余额',
+    meta: { class: { td: 'text-right' } },
+    cell: ({ row }) => formatAmount(Number(row.getValue('balance')))
+  },
+  {
+    accessorKey: 'frozen_balance',
+    header: '冻结余额',
+    meta: { class: { td: 'text-right' } },
+    cell: ({ row }) => formatAmount(Number(row.getValue('frozen_balance')))
+  },
+  {
+    accessorKey: 'updated_at',
+    header: '更新时间',
+    cell: ({ row }) => formatTime(String(row.getValue('updated_at')))
+  }
+])
+</script>

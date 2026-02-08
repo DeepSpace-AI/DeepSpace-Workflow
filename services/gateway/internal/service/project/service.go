@@ -30,8 +30,8 @@ type ProjectItem struct {
 	UpdatedAt   string  `json:"updated_at"`
 }
 
-func (s *Service) List(ctx context.Context, orgID int64) ([]ProjectItem, error) {
-	items, err := s.repo.ListByOrg(ctx, orgID)
+func (s *Service) List(ctx context.Context, userID int64) ([]ProjectItem, error) {
+	items, err := s.repo.ListByOrg(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +50,8 @@ func (s *Service) List(ctx context.Context, orgID int64) ([]ProjectItem, error) 
 	return result, nil
 }
 
-func (s *Service) Get(ctx context.Context, orgID, projectID int64) (*ProjectItem, error) {
-	item, err := s.repo.Get(ctx, orgID, projectID)
+func (s *Service) Get(ctx context.Context, userID, projectID int64) (*ProjectItem, error) {
+	item, err := s.repo.Get(ctx, userID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *Service) Get(ctx context.Context, orgID, projectID int64) (*ProjectItem
 	}, nil
 }
 
-func (s *Service) Create(ctx context.Context, orgID int64, name string, description *string, projectType string) (*ProjectItem, error) {
+func (s *Service) Create(ctx context.Context, userID int64, name string, description *string, projectType string) (*ProjectItem, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		name = "Untitled Project"
@@ -82,7 +82,7 @@ func (s *Service) Create(ctx context.Context, orgID int64, name string, descript
 
 	projectType = normalizeProjectType(projectType)
 
-	item, err := s.repo.Create(ctx, orgID, name, description, projectType)
+	item, err := s.repo.Create(ctx, userID, name, description, projectType)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (s *Service) Create(ctx context.Context, orgID int64, name string, descript
 	}, nil
 }
 
-func (s *Service) Update(ctx context.Context, orgID, projectID int64, name *string, description *string) (*ProjectItem, error) {
+func (s *Service) Update(ctx context.Context, userID, projectID int64, name *string, description *string) (*ProjectItem, error) {
 	if name != nil {
 		value := strings.TrimSpace(*name)
 		if value == "" {
@@ -115,7 +115,7 @@ func (s *Service) Update(ctx context.Context, orgID, projectID int64, name *stri
 		return nil, ErrNoProjectUpdates
 	}
 
-	item, err := s.repo.Update(ctx, orgID, projectID, name, description)
+	item, err := s.repo.Update(ctx, userID, projectID, name, description)
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +133,12 @@ func (s *Service) Update(ctx context.Context, orgID, projectID int64, name *stri
 	}, nil
 }
 
-func (s *Service) Delete(ctx context.Context, orgID, projectID int64) (bool, error) {
-	return s.repo.Delete(ctx, orgID, projectID)
+func (s *Service) Delete(ctx context.Context, userID, projectID int64) (bool, error) {
+	return s.repo.Delete(ctx, userID, projectID)
 }
 
-func (s *Service) CountByOrg(ctx context.Context, orgID int64) (int64, error) {
-	return s.repo.CountByOrg(ctx, orgID)
+func (s *Service) CountByOrg(ctx context.Context, userID int64) (int64, error) {
+	return s.repo.CountByOrg(ctx, userID)
 }
 
 func normalizeProjectType(value string) string {

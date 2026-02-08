@@ -47,7 +47,7 @@ Organization
 Web (Nuxt + PrimeVue)
   → Gateway (Go: Auth / Billing / SSE / Pipeline)
     → NewAPI → Upstream Models
-Admin Web (React + Ant Design)
+Admin Web (Nuxt + Nuxt UI)
   → Admin API (Go)
 ```
 
@@ -108,7 +108,26 @@ Auth → RateLimit → Budget Hold → Policy
 
 ---
 
-## 7. Roadmap（简化）
+## 7. Worker 邮件队列
+
+Worker 用于消费邮件发送队列（Redis List），通过 SMTP 发送邮件，并支持失败重试与死信队列。
+
+运行方式：
+
+```
+cd services/worker
+go run ./cmd/worker
+```
+
+关键行为：
+
+* 使用 Redis `BRPOP` 阻塞拉取队列
+* 发送失败重试（默认 5 次）
+* 超过重试次数写入死信队列（默认 `email:dead`）
+
+主要配置项见 `.env.example` 的 Worker/邮件部分。
+
+## 8. Roadmap（简化）
 
 1. Chat + Gateway + Billing MVP
 2. Project + RAG（科研最小闭环）
@@ -116,7 +135,7 @@ Auth → RateLimit → Budget Hold → Policy
 4. MCP / Skills 扩展
 
 
-## 8.目录结构
+## 9.目录结构
 
 ```
 deepspace-workflows/
@@ -129,7 +148,7 @@ deepspace-workflows/
 ├─ Makefile
 │
 ├─ apps/
-│  ├─ web/                         # Nuxt 3 + Nuxt UI（用户端：Chat / Workflow / KB）
+│  ├─ web/                         # Nuxt 4 + Nuxt UI（用户端：Chat / Workflow / KB）
 │  │  ├─ nuxt.config.ts
 │  │  ├─ package.json
 │  │  ├─ app.vue
@@ -170,7 +189,7 @@ deepspace-workflows/
 │  │  ├─ utils/
 │  │  └─ assets/
 │  │
-│  └─ admin/                       # Nuxt 3 + Nuxt UI（管理端：定价/对账/审计/风控）
+│  └─ admin/                       # Nuxt 4 + Nuxt UI（管理端：定价/对账/审计/风控）
 │     ├─ nuxt.config.ts
 │     ├─ package.json
 │     ├─ pages/

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>欢迎加入 DeepSpace</title>
+    <style>
+      body { margin: 0; padding: 0; background: #f4f7fb; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif; color: #1f2937; }
+      .container { max-width: 640px; margin: 0 auto; padding: 32px 20px; }
+      .card { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); overflow: hidden; }
+      .header { padding: 28px 32px; background: linear-gradient(120deg, #0f766e, #14b8a6); color: #ffffff; }
+      .brand { font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+      .content { padding: 28px 32px 16px 32px; }
+      .title { font-size: 22px; font-weight: 700; margin: 0 0 12px 0; }
+      .meta { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
+      .text { font-size: 15px; line-height: 1.8; margin: 0 0 16px 0; }
+      .highlight { background: #f0fdfa; border-left: 4px solid #14b8a6; padding: 12px 14px; border-radius: 10px; color: #0f766e; font-size: 14px; margin: 16px 0; }
+      .cta { display: inline-block; padding: 12px 18px; background: #0f766e; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px; }
+      .footer { padding: 16px 32px 28px 32px; font-size: 12px; color: #9ca3af; }
+      .divider { height: 1px; background: #e5e7eb; margin: 0 32px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="header">
+          <div class="brand">DeepSpace</div>
+          <div>欢迎加入深空工作流平台</div>
+        </div>
+        <div class="content">
+          <h1 class="title">你好，{{ .username }}</h1>
+          <div class="meta">发送时间：{{ .date }}</div>
+          <p class="text">很高兴与你一起开启 AI 研究与协作的新旅程。DeepSpace 将帮助你在项目、知识库与工作流之间构建清晰可复现的研究路径。</p>
+          <div class="highlight">如果你需要快速上手，可以从创建项目、导入资料和开启一次聊天开始。</div>
+          <p class="text">我们已经为你准备好了基础能力，随时可以开始你的探索。</p>
+          <a class="cta" href="{{ .address }}">进入控制台</a>
+        </div>
+        <div class="divider"></div>
+        <div class="footer">
+          这是一封系统自动发送的邮件，请勿直接回复。
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

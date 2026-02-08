@@ -13,7 +13,7 @@ import (
 
 var (
 	ErrInvalidName = errors.New("invalid name")
-	ErrNoUpdates  = errors.New("no updates")
+	ErrNoUpdates   = errors.New("no updates")
 )
 
 type Service struct {
@@ -26,7 +26,7 @@ func New(repo *repo.ProjectWorkflowRepo) *Service {
 
 type WorkflowItem struct {
 	ID          int64          `json:"id"`
-	OrgID       int64          `json:"org_id"`
+	UserID      int64          `json:"user_id"`
 	ProjectID   int64          `json:"project_id"`
 	Name        string         `json:"name"`
 	Description *string        `json:"description"`
@@ -35,8 +35,8 @@ type WorkflowItem struct {
 	UpdatedAt   string         `json:"updated_at"`
 }
 
-func (s *Service) ListByProject(ctx context.Context, orgID, projectID int64) ([]WorkflowItem, error) {
-	items, err := s.repo.ListByProject(ctx, orgID, projectID)
+func (s *Service) ListByProject(ctx context.Context, userID, projectID int64) ([]WorkflowItem, error) {
+	items, err := s.repo.ListByProject(ctx, userID, projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (s *Service) ListByProject(ctx context.Context, orgID, projectID int64) ([]
 	return result, nil
 }
 
-func (s *Service) Get(ctx context.Context, orgID, projectID, workflowID int64) (*WorkflowItem, error) {
-	item, err := s.repo.Get(ctx, orgID, projectID, workflowID)
+func (s *Service) Get(ctx context.Context, userID, projectID, workflowID int64) (*WorkflowItem, error) {
+	item, err := s.repo.Get(ctx, userID, projectID, workflowID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (s *Service) Get(ctx context.Context, orgID, projectID, workflowID int64) (
 	return &mapped, nil
 }
 
-func (s *Service) Create(ctx context.Context, orgID, projectID int64, name string, description *string, steps datatypes.JSON) (*WorkflowItem, error) {
+func (s *Service) Create(ctx context.Context, userID, projectID int64, name string, description *string, steps datatypes.JSON) (*WorkflowItem, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, ErrInvalidName
 	}
 	item := &model.ProjectWorkflow{
-		OrgID:       orgID,
+		UserID:      userID,
 		ProjectID:   projectID,
 		Name:        strings.TrimSpace(name),
 		Description: description,
@@ -77,7 +77,7 @@ func (s *Service) Create(ctx context.Context, orgID, projectID int64, name strin
 	return &mapped, nil
 }
 
-func (s *Service) Update(ctx context.Context, orgID, projectID, workflowID int64, name *string, description *string, steps *datatypes.JSON) (*WorkflowItem, error) {
+func (s *Service) Update(ctx context.Context, userID, projectID, workflowID int64, name *string, description *string, steps *datatypes.JSON) (*WorkflowItem, error) {
 	updates := map[string]any{}
 	if name != nil {
 		if strings.TrimSpace(*name) == "" {
@@ -94,7 +94,7 @@ func (s *Service) Update(ctx context.Context, orgID, projectID, workflowID int64
 	if len(updates) == 0 {
 		return nil, ErrNoUpdates
 	}
-	item, err := s.repo.Update(ctx, orgID, projectID, workflowID, updates)
+	item, err := s.repo.Update(ctx, userID, projectID, workflowID, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -105,14 +105,14 @@ func (s *Service) Update(ctx context.Context, orgID, projectID, workflowID int64
 	return &mapped, nil
 }
 
-func (s *Service) Delete(ctx context.Context, orgID, projectID, workflowID int64) (bool, error) {
-	return s.repo.Delete(ctx, orgID, projectID, workflowID)
+func (s *Service) Delete(ctx context.Context, userID, projectID, workflowID int64) (bool, error) {
+	return s.repo.Delete(ctx, userID, projectID, workflowID)
 }
 
 func mapWorkflowItem(item *model.ProjectWorkflow) WorkflowItem {
 	return WorkflowItem{
 		ID:          item.ID,
-		OrgID:       item.OrgID,
+		UserID:      item.UserID,
 		ProjectID:   item.ProjectID,
 		Name:        item.Name,
 		Description: item.Description,

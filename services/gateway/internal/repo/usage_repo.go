@@ -22,7 +22,7 @@ func (r *UsageRepo) Create(ctx context.Context, record model.UsageRecord) error 
 }
 
 type UsageListFilter struct {
-	OrgID  int64
+	UserID int64
 	Start  *time.Time
 	End    *time.Time
 	Limit  int
@@ -31,7 +31,7 @@ type UsageListFilter struct {
 
 func (r *UsageRepo) List(ctx context.Context, filter UsageListFilter) ([]model.UsageRecord, error) {
 	query := r.db.WithContext(ctx).
-		Where("org_id = ?", filter.OrgID)
+		Where("user_id = ?", filter.UserID)
 	if filter.Start != nil {
 		query = query.Where("created_at >= ?", *filter.Start)
 	}
@@ -50,10 +50,10 @@ func (r *UsageRepo) List(ctx context.Context, filter UsageListFilter) ([]model.U
 	return records, nil
 }
 
-func (r *UsageRepo) Count(ctx context.Context, orgID int64, start, end *time.Time) (int64, error) {
+func (r *UsageRepo) Count(ctx context.Context, userID int64, start, end *time.Time) (int64, error) {
 	query := r.db.WithContext(ctx).
 		Model(&model.UsageRecord{}).
-		Where("org_id = ?", orgID)
+		Where("user_id = ?", userID)
 	if start != nil {
 		query = query.Where("created_at >= ?", *start)
 	}
@@ -67,10 +67,10 @@ func (r *UsageRepo) Count(ctx context.Context, orgID int64, start, end *time.Tim
 	return count, nil
 }
 
-func (r *UsageRepo) SumCost(ctx context.Context, orgID int64, start, end *time.Time) (float64, error) {
+func (r *UsageRepo) SumCost(ctx context.Context, userID int64, start, end *time.Time) (float64, error) {
 	query := r.db.WithContext(ctx).
 		Model(&model.UsageRecord{}).
-		Where("org_id = ?", orgID)
+		Where("user_id = ?", userID)
 	if start != nil {
 		query = query.Where("created_at >= ?", *start)
 	}

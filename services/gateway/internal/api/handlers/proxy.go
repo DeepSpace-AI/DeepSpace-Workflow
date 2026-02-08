@@ -7,11 +7,14 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"deepspace/internal/integrations/newapi"
 	"deepspace/internal/pipeline"
 	"deepspace/internal/pipeline/steps"
 	"deepspace/internal/service/billing"
+	modelservice "deepspace/internal/service/model"
+	planservice "deepspace/internal/service/plan"
 	"deepspace/internal/service/usage"
 
 	"github.com/gin-gonic/gin"
@@ -26,10 +29,12 @@ type ProxyHandler struct {
 	billing *billing.Service
 	usage   *usage.Service
 	newapi  *newapi.Client
+	model   *modelservice.Service
+	plan    *planservice.Service
 }
 
-func NewProxyHandler(billingSvc *billing.Service, usageSvc *usage.Service, newapiClient *newapi.Client) *ProxyHandler {
-	return &ProxyHandler{billing: billingSvc, usage: usageSvc, newapi: newapiClient}
+func NewProxyHandler(billingSvc *billing.Service, usageSvc *usage.Service, newapiClient *newapi.Client, modelSvc *modelservice.Service, planSvc *planservice.Service) *ProxyHandler {
+	return &ProxyHandler{billing: billingSvc, usage: usageSvc, newapi: newapiClient, model: modelSvc, plan: planSvc}
 }
 
 func (h *ProxyHandler) Handle(c *gin.Context) {
@@ -38,9 +43,9 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 		return
 	}
 
-	orgID, ok := getOrgID(c)
+	userID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -51,7 +56,7 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 
 	// If billing is enabled but no amount is provided, still guard zero-balance usage.
 	if h.billing != nil {
-		wallet, err := h.billing.GetWallet(c.Request.Context(), orgID)
+		wallet, err := h.billing.GetWallet(c.Request.Context(), userID)
 		if err != nil {
 			respondInternal(c, "failed to load wallet")
 			return
@@ -69,20 +74,53 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 	}
 
 	modelName := peekModelFromBody(c)
+	modelID := ""
 
 	state := pipeline.NewState()
-	state.OrgID = orgID
+	state.UserID = userID
 	state.CostAmount = amount
 	state.Model = modelName
+	if hasAmount {
+		state.Meta["billing_amount_provided"] = true
+	}
 	state.RefID = resolveRefID(c, hasAmount)
 	if state.RefID == "" && hasAmount {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ref_id is required for billing"})
 		return
 	}
+	if h.model != nil && modelName != "" {
+		items, err := h.model.ListAll(c.Request.Context())
+		if err == nil {
+			for _, item := range items {
+				if item.Name == modelName {
+					modelID = item.ID
+					state.Meta["price_input"] = item.PriceInput
+					state.Meta["price_output"] = item.PriceOutput
+					state.Meta["currency"] = item.Currency
+					break
+				}
+			}
+		}
+	}
+	if h.plan != nil {
+		price, ok, err := h.plan.GetActivePlanPrice(c.Request.Context(), userID, modelID, time.Now().UTC())
+		if err == nil && ok && price != nil {
+			state.Meta["plan_applied"] = true
+			state.Meta["plan_id"] = price.PlanID
+			state.Meta["plan_billing_mode"] = price.BillingMode
+			state.Meta["plan_currency"] = price.Currency
+			state.Meta["plan_price_input"] = price.PriceInput
+			state.Meta["plan_price_output"] = price.PriceOutput
+			state.Meta["plan_price_request"] = price.PriceRequest
+		}
+	}
 	if value, ok := c.Get("trace_id"); ok {
 		if v, ok := value.(string); ok {
 			state.TraceID = v
 		}
+	}
+	if state.RefID == "" && state.TraceID != "" {
+		state.RefID = state.TraceID
 	}
 
 	pre := pipeline.New(
@@ -97,6 +135,11 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 
 	h.newapi.Proxy(c)
 	state.StatusCode = c.Writer.Status()
+	if usage, ok := newapi.GetUsageFromContext(c); ok {
+		state.UsagePromptTokens = usage.PromptTokens
+		state.UsageCompletionTokens = usage.CompletionTokens
+		state.UsageTotalTokens = usage.TotalTokens
+	}
 
 	post := pipeline.New(
 		steps.NewUsageCapture(h.billing, h.usage),

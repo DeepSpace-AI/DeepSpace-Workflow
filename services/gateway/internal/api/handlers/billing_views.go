@@ -24,13 +24,13 @@ func NewBillingViewHandler(billingSvc *billing.Service, usageSvc *usage.Service)
 }
 
 func (h *BillingViewHandler) Wallet(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	userID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
-	wallet, err := h.billingSvc.GetWallet(c.Request.Context(), orgID)
+	wallet, err := h.billingSvc.GetWallet(c.Request.Context(), userID)
 	if err != nil {
 		respondInternal(c, "failed to load wallet")
 		return
@@ -40,7 +40,7 @@ func (h *BillingViewHandler) Wallet(c *gin.Context) {
 	if h.usageSvc != nil {
 		end := time.Now().UTC()
 		start := end.Add(-24 * time.Hour)
-		total, err := h.usageSvc.SumCost(c.Request.Context(), orgID, &start, &end)
+		total, err := h.usageSvc.SumCost(c.Request.Context(), userID, &start, &end)
 		if err != nil {
 			respondInternal(c, "failed to load usage")
 			return
@@ -59,9 +59,9 @@ func (h *BillingViewHandler) Usage(c *gin.Context) {
 		respondInternal(c, "usage service unavailable")
 		return
 	}
-	orgID, ok := getOrgID(c)
+	userID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -94,7 +94,7 @@ func (h *BillingViewHandler) Usage(c *gin.Context) {
 	}
 
 	items, total, err := h.usageSvc.List(c.Request.Context(), usage.ListInput{
-		OrgID:    orgID,
+		UserID:   userID,
 		Start:    start,
 		End:      end,
 		Page:     page,

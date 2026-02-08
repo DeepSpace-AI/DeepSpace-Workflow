@@ -18,9 +18,9 @@ func NewProjectSkillHandler(svc *projectskill.Service) *ProjectSkillHandler {
 }
 
 func (h *ProjectSkillHandler) List(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -46,9 +46,9 @@ type createSkillRequest struct {
 }
 
 func (h *ProjectSkillHandler) Create(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -84,9 +84,9 @@ type updateSkillRequest struct {
 }
 
 func (h *ProjectSkillHandler) Update(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 
@@ -131,9 +131,9 @@ func (h *ProjectSkillHandler) Update(c *gin.Context) {
 }
 
 func (h *ProjectSkillHandler) Delete(c *gin.Context) {
-	orgID, ok := getOrgID(c)
+	orgID, ok := getUserID(c)
 	if !ok {
-		respondInternal(c, "org_id missing")
+		respondInternal(c, "user_id 缺失")
 		return
 	}
 

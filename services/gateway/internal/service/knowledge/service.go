@@ -55,7 +55,7 @@ var (
 
 type KnowledgeBaseItem struct {
 	ID          int64   `json:"id"`
-	OrgID       int64   `json:"org_id"`
+	UserID      int64   `json:"user_id"`
 	ProjectID   *int64  `json:"project_id"`
 	Scope       string  `json:"scope"`
 	Name        string  `json:"name"`
@@ -68,7 +68,7 @@ type KnowledgeBaseItem struct {
 type KnowledgeDocumentItem struct {
 	ID              int64   `json:"id"`
 	KnowledgeBaseID int64   `json:"knowledge_base_id"`
-	OrgID           int64   `json:"org_id"`
+	UserID          int64   `json:"user_id"`
 	ProjectID       *int64  `json:"project_id"`
 	FileName        string  `json:"file_name"`
 	ContentType     *string `json:"content_type"`
@@ -79,8 +79,8 @@ type KnowledgeDocumentItem struct {
 	UpdatedAt       string  `json:"updated_at"`
 }
 
-func (s *Service) ListBases(ctx context.Context, orgID int64, scope string, projectID *int64) ([]KnowledgeBaseItem, error) {
-	items, err := s.repo.ListBases(ctx, orgID, scope, projectID, false)
+func (s *Service) ListBases(ctx context.Context, userID int64, scope string, projectID *int64) ([]KnowledgeBaseItem, error) {
+	items, err := s.repo.ListBases(ctx, userID, scope, projectID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (s *Service) ListBases(ctx context.Context, orgID int64, scope string, proj
 	for _, item := range items {
 		result = append(result, KnowledgeBaseItem{
 			ID:          item.ID,
-			OrgID:       item.OrgID,
+			UserID:      item.UserID,
 			ProjectID:   item.ProjectID,
 			Scope:       item.Scope,
 			Name:        item.Name,
@@ -102,8 +102,8 @@ func (s *Service) ListBases(ctx context.Context, orgID int64, scope string, proj
 	return result, nil
 }
 
-func (s *Service) GetBase(ctx context.Context, orgID, id int64) (*KnowledgeBaseItem, error) {
-	base, err := s.repo.GetBase(ctx, orgID, id)
+func (s *Service) GetBase(ctx context.Context, userID, id int64) (*KnowledgeBaseItem, error) {
+	base, err := s.repo.GetBase(ctx, userID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (s *Service) GetBase(ctx context.Context, orgID, id int64) (*KnowledgeBaseI
 	}
 	return &KnowledgeBaseItem{
 		ID:          base.ID,
-		OrgID:       base.OrgID,
+		UserID:      base.UserID,
 		ProjectID:   base.ProjectID,
 		Scope:       base.Scope,
 		Name:        base.Name,
@@ -123,7 +123,7 @@ func (s *Service) GetBase(ctx context.Context, orgID, id int64) (*KnowledgeBaseI
 	}, nil
 }
 
-func (s *Service) CreateBase(ctx context.Context, orgID int64, scope string, name string, description *string, projectID *int64) (*KnowledgeBaseItem, error) {
+func (s *Service) CreateBase(ctx context.Context, userID int64, scope string, name string, description *string, projectID *int64) (*KnowledgeBaseItem, error) {
 	scope = strings.ToLower(strings.TrimSpace(scope))
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -139,7 +139,7 @@ func (s *Service) CreateBase(ctx context.Context, orgID int64, scope string, nam
 			return nil, ErrProjectRequired
 		}
 		if s.projectRepo != nil {
-			project, err := s.projectRepo.Get(ctx, orgID, *projectID)
+			project, err := s.projectRepo.Get(ctx, userID, *projectID)
 			if err != nil {
 				return nil, err
 			}
@@ -155,7 +155,7 @@ func (s *Service) CreateBase(ctx context.Context, orgID int64, scope string, nam
 	}
 
 	base := &model.KnowledgeBase{
-		OrgID:       orgID,
+		UserID:      userID,
 		ProjectID:   projectID,
 		Scope:       scope,
 		Name:        name,
@@ -168,7 +168,7 @@ func (s *Service) CreateBase(ctx context.Context, orgID int64, scope string, nam
 
 	return &KnowledgeBaseItem{
 		ID:          base.ID,
-		OrgID:       base.OrgID,
+		UserID:      base.UserID,
 		ProjectID:   base.ProjectID,
 		Scope:       base.Scope,
 		Name:        base.Name,
@@ -179,7 +179,7 @@ func (s *Service) CreateBase(ctx context.Context, orgID int64, scope string, nam
 	}, nil
 }
 
-func (s *Service) UpdateBase(ctx context.Context, orgID, id int64, name *string, description *string) (*KnowledgeBaseItem, error) {
+func (s *Service) UpdateBase(ctx context.Context, userID, id int64, name *string, description *string) (*KnowledgeBaseItem, error) {
 	updates := map[string]any{}
 
 	if name != nil {
@@ -200,7 +200,7 @@ func (s *Service) UpdateBase(ctx context.Context, orgID, id int64, name *string,
 
 	updates["updated_at"] = time.Now()
 
-	item, err := s.repo.UpdateBase(ctx, orgID, id, updates)
+	item, err := s.repo.UpdateBase(ctx, userID, id, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (s *Service) UpdateBase(ctx context.Context, orgID, id int64, name *string,
 
 	return &KnowledgeBaseItem{
 		ID:          item.ID,
-		OrgID:       item.OrgID,
+		UserID:      item.UserID,
 		ProjectID:   item.ProjectID,
 		Scope:       item.Scope,
 		Name:        item.Name,
@@ -221,8 +221,8 @@ func (s *Service) UpdateBase(ctx context.Context, orgID, id int64, name *string,
 	}, nil
 }
 
-func (s *Service) DeleteBase(ctx context.Context, orgID, id int64) (bool, error) {
-	docs, err := s.repo.ListDocuments(ctx, orgID, id)
+func (s *Service) DeleteBase(ctx context.Context, userID, id int64) (bool, error) {
+	docs, err := s.repo.ListDocuments(ctx, userID, id)
 	if err != nil {
 		return false, err
 	}
@@ -230,11 +230,11 @@ func (s *Service) DeleteBase(ctx context.Context, orgID, id int64) (bool, error)
 		_ = os.Remove(doc.StoragePath)
 	}
 
-	return s.repo.DeleteBase(ctx, orgID, id)
+	return s.repo.DeleteBase(ctx, userID, id)
 }
 
-func (s *Service) ListDocuments(ctx context.Context, orgID, kbID int64) ([]KnowledgeDocumentItem, error) {
-	docs, err := s.repo.ListDocuments(ctx, orgID, kbID)
+func (s *Service) ListDocuments(ctx context.Context, userID, kbID int64) ([]KnowledgeDocumentItem, error) {
+	docs, err := s.repo.ListDocuments(ctx, userID, kbID)
 	if err != nil {
 		return nil, err
 	}
@@ -246,8 +246,8 @@ func (s *Service) ListDocuments(ctx context.Context, orgID, kbID int64) ([]Knowl
 	return result, nil
 }
 
-func (s *Service) CreateDocument(ctx context.Context, orgID, kbID int64, fileName string, contentType *string, sizeBytes *int64, reader io.Reader) (*KnowledgeDocumentItem, error) {
-	base, err := s.repo.GetBase(ctx, orgID, kbID)
+func (s *Service) CreateDocument(ctx context.Context, userID, kbID int64, fileName string, contentType *string, sizeBytes *int64, reader io.Reader) (*KnowledgeDocumentItem, error) {
+	base, err := s.repo.GetBase(ctx, userID, kbID)
 	if err != nil {
 		return nil, err
 	}
@@ -262,13 +262,13 @@ func (s *Service) CreateDocument(ctx context.Context, orgID, kbID int64, fileNam
 		return nil, err
 	}
 
-	storagePath, err := s.persistFile(orgID, kbID, fileName, reader)
+	storagePath, err := s.persistFile(userID, kbID, fileName, reader)
 	if err != nil {
 		return nil, err
 	}
 
 	doc := &model.KnowledgeDocument{
-		OrgID:           orgID,
+		UserID:          userID,
 		ProjectID:       base.ProjectID,
 		KnowledgeBaseID: kbID,
 		FileName:        fileName,
@@ -314,8 +314,8 @@ func (s *Service) MaxUploadBytes() int64 {
 	return s.maxUpload
 }
 
-func (s *Service) DeleteDocument(ctx context.Context, orgID, kbID, docID int64) (bool, error) {
-	doc, err := s.repo.DeleteDocument(ctx, orgID, kbID, docID)
+func (s *Service) DeleteDocument(ctx context.Context, userID, kbID, docID int64) (bool, error) {
+	doc, err := s.repo.DeleteDocument(ctx, userID, kbID, docID)
 	if err != nil {
 		return false, err
 	}
@@ -326,16 +326,16 @@ func (s *Service) DeleteDocument(ctx context.Context, orgID, kbID, docID int64) 
 	return true, nil
 }
 
-func (s *Service) GetDocument(ctx context.Context, orgID, kbID, docID int64) (*model.KnowledgeDocument, error) {
-	return s.repo.GetDocument(ctx, orgID, kbID, docID)
+func (s *Service) GetDocument(ctx context.Context, userID, kbID, docID int64) (*model.KnowledgeDocument, error) {
+	return s.repo.GetDocument(ctx, userID, kbID, docID)
 }
 
-func (s *Service) CountDocumentsByOrg(ctx context.Context, orgID int64) (int64, error) {
-	return s.repo.CountDocumentsByOrg(ctx, orgID)
+func (s *Service) CountDocumentsByOrg(ctx context.Context, userID int64) (int64, error) {
+	return s.repo.CountDocumentsByOrg(ctx, userID)
 }
 
-func (s *Service) persistFile(orgID, kbID int64, fileName string, reader io.Reader) (string, error) {
-	baseDir := filepath.Join(s.storagePath, fmt.Sprintf("%d", orgID), fmt.Sprintf("%d", kbID))
+func (s *Service) persistFile(userID, kbID int64, fileName string, reader io.Reader) (string, error) {
+	baseDir := filepath.Join(s.storagePath, fmt.Sprintf("%d", userID), fmt.Sprintf("%d", kbID))
 	if err := os.MkdirAll(baseDir, 0o755); err != nil {
 		return "", err
 	}
@@ -362,7 +362,7 @@ func mapDocumentItem(doc *model.KnowledgeDocument) KnowledgeDocumentItem {
 	return KnowledgeDocumentItem{
 		ID:              doc.ID,
 		KnowledgeBaseID: doc.KnowledgeBaseID,
-		OrgID:           doc.OrgID,
+		UserID:          doc.UserID,
 		ProjectID:       doc.ProjectID,
 		FileName:        doc.FileName,
 		ContentType:     doc.ContentType,
