@@ -1,6 +1,7 @@
+![DeepSpace Logo](./docs/deepspace-logo.png)
 # DeepSpace Workflows
 
-> **DeepSpace Workflows** 是一个面向科研与研发场景的 **可商用 AI Workflow 平台**，以 Chat 为入口，以 Workflow / Pipeline 为核心，以 **计费、审计、可追溯** 为基础能力，构建可长期演进的 AI Research Infrastructure。
+> **DeepSpace Workflows** 是一个面向科研与研发场景的 **AI Workflow 平台**，以 Chat 为入口，以 Workflow / Pipeline 为核心，以 **写作、协作、技能** 为基础能力，构建可长期演进的 AI Research Infrastructure。
 
 ---
 
@@ -8,17 +9,10 @@
 
 DeepSpace Workflows 并不是一个简单的 ChatGPT 替代品，而是一个 **AI 工作流与科研协作平台（AI Research OS）**，核心目标包括：
 
-* 🧪 **科研可复现**：每一次 AI 调用都可追溯（trace_id）
-* 💰 **商用可计费**：支持冻结 / 扣费 / 解冻的完整计费闭环
-* 🧩 **能力可编排**：RAG、Tools、Skills、Workflow 统一通过 Pipeline 组织
-* 🏢 **组织级治理**：用户 / 组织 / 项目 / 权限 / 审计
-
-适用对象：
-
-* 高校科研团队
-* 企业 R&D 团队
-* AI 应用与平台型产品
-* 教育与科研 AI 平台
+* **多步骤 AI 任务编排**：支持复杂的多步骤任务（如文献综述、实验设计、数据分析等），而非单一问答。
+* **可插拔能力链路**：通过 Pipeline 机制，灵活串联
+  RAG、技能（Skills）、工具（Tools）等能力，满足多样化需求。
+* **项目与知识库管理**：支持多项目隔离与知识库构建
 
 ---
 
