@@ -13,11 +13,13 @@ import (
 	"deepspace/internal/service/email"
 	"deepspace/internal/service/knowledge"
 	modelservice "deepspace/internal/service/model"
+	"deepspace/internal/service/passwordreset"
 	planservice "deepspace/internal/service/plan"
 	"deepspace/internal/service/project"
 	"deepspace/internal/service/projectdocument"
 	"deepspace/internal/service/projectskill"
 	"deepspace/internal/service/projectworkflow"
+	"deepspace/internal/service/risk"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 
@@ -41,7 +43,9 @@ func SetupRoutes(
 	projectSkillService *projectskill.Service,
 	projectWorkflowService *projectworkflow.Service,
 	authService *auth.UserAuthService,
+	passwordResetService *passwordreset.Service,
 	userService *user.Service,
+	riskService *risk.Service,
 	jwtManager *auth.JWTManager,
 ) {
 	// Health check
@@ -57,7 +61,8 @@ func SetupRoutes(
 
 	billingHandler := handlers.NewBillingHandler(billingService)
 	billingViewHandler := handlers.NewBillingViewHandler(billingService, usageService)
-	proxyHandler := handlers.NewProxyHandler(billingService, usageService, newAPIClient, modelService, planService)
+	adminBillingHandler := handlers.NewAdminBillingHandler(billingService, usageService)
+	proxyHandler := handlers.NewProxyHandler(billingService, usageService, riskService, newAPIClient, modelService, planService)
 	projectHandler := handlers.NewProjectHandler(projectService, knowledgeService)
 	chatHandler := handlers.NewChatSessionHandler(chatService)
 	emailHandler := handlers.NewEmailHandler(emailService)
@@ -69,13 +74,18 @@ func SetupRoutes(
 	projectSkillHandler := handlers.NewProjectSkillHandler(projectSkillService)
 	projectWorkflowHandler := handlers.NewProjectWorkflowHandler(projectWorkflowService)
 	authHandler := handlers.NewAuthHandler(authService, jwtManager)
+	passwordResetHandler := handlers.NewPasswordResetHandler(passwordResetService)
 	userHandler := handlers.NewUserHandler(userService, authService)
+	adminRiskHandler := handlers.NewAdminRiskHandler(riskService)
 	api := r.Group("/api")
 	{
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
 		api.POST("/auth/logout", authHandler.Logout)
 		api.GET("/auth/me", middleware.UserAuth(jwtManager), authHandler.Me)
+		api.POST("/auth/password-reset/request", passwordResetHandler.RequestPasswordReset)
+		api.POST("/auth/password-reset/confirm", passwordResetHandler.ConfirmPasswordReset)
+		api.GET("/plans", planHandler.ListPublic)
 
 		protected := api.Group("")
 		protected.Use(middleware.UserAuth(jwtManager))
@@ -151,9 +161,29 @@ func SetupRoutes(
 			admin.GET("/plans", planHandler.List)
 			admin.POST("/plans", planHandler.Create)
 			admin.PATCH("/plans/:id", planHandler.Update)
+			admin.GET("/billing/wallets", adminBillingHandler.Wallets)
+			admin.GET("/billing/transactions", adminBillingHandler.Transactions)
+			admin.GET("/billing/usage", adminBillingHandler.Usage)
+			admin.POST("/billing/topups", adminBillingHandler.TopUp)
 			admin.POST("/subscriptions", planSubscriptionHandler.Create)
 			admin.PATCH("/subscriptions/:id", planSubscriptionHandler.Update)
 			admin.GET("/users/:id/subscription", planSubscriptionHandler.GetOrgActive)
+			admin.GET("/risk/policies", adminRiskHandler.ListPolicies)
+			admin.POST("/risk/policies", adminRiskHandler.CreatePolicy)
+			admin.PATCH("/risk/policies/:id", adminRiskHandler.UpdatePolicy)
+			admin.DELETE("/risk/policies/:id", adminRiskHandler.DeletePolicy)
+			admin.GET("/risk/rate-limits", adminRiskHandler.ListRateLimits)
+			admin.POST("/risk/rate-limits", adminRiskHandler.CreateRateLimit)
+			admin.PATCH("/risk/rate-limits/:id", adminRiskHandler.UpdateRateLimit)
+			admin.DELETE("/risk/rate-limits/:id", adminRiskHandler.DeleteRateLimit)
+			admin.GET("/risk/ip-rules", adminRiskHandler.ListIPRules)
+			admin.POST("/risk/ip-rules", adminRiskHandler.CreateIPRule)
+			admin.PATCH("/risk/ip-rules/:id", adminRiskHandler.UpdateIPRule)
+			admin.DELETE("/risk/ip-rules/:id", adminRiskHandler.DeleteIPRule)
+			admin.GET("/risk/budget-caps", adminRiskHandler.ListBudgetCaps)
+			admin.POST("/risk/budget-caps", adminRiskHandler.CreateBudgetCap)
+			admin.PATCH("/risk/budget-caps/:id", adminRiskHandler.UpdateBudgetCap)
+			admin.DELETE("/risk/budget-caps/:id", adminRiskHandler.DeleteBudgetCap)
 		}
 	}
 

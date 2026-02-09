@@ -2,6 +2,11 @@
 definePageMeta({
   layout: 'editor',
 })
+useHead({
+  title: "智能助手 - Deepspace Workflow",
+})
+
+
 
 const conversations = useStandaloneChatConversations()
 const models = useModels()
@@ -67,7 +72,7 @@ async function handleDraw(prompt: string) {
 </script>
 
 <template>
-  <div class="flex min-h-[calc(100vh-4rem)]">
+  <div class="flex min-h-[calc(100vh-4rem)] bg-neutral-100 dark:bg-neutral-950">
     <ChatSider
       :conversations="conversations.conversationOptions.value"
       :active-conversation-id="null"

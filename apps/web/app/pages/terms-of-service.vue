@@ -53,3 +53,9 @@
     </UContainer>
   </div>
 </template>
+<script setup lang="ts">
+definePageMeta({ layout: false })
+useHead({
+  title: "服务条款 - Deepspace Workflow",
+})
+</script>

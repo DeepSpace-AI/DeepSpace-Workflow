@@ -67,7 +67,7 @@ func New(cfg *config.Config) (*Service, error) {
 
 	svc := &Service{cfg: cfg}
 
-	if cfg.RedisEnabled {
+	if strings.TrimSpace(cfg.RedisURL) != "" {
 		opt, err := redis.ParseURL(cfg.RedisURL)
 		if err != nil {
 			return nil, err

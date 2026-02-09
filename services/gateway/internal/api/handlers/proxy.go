@@ -3,11 +3,11 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"deepspace/internal/integrations/newapi"
 	"deepspace/internal/pipeline"
@@ -15,6 +15,7 @@ import (
 	"deepspace/internal/service/billing"
 	modelservice "deepspace/internal/service/model"
 	planservice "deepspace/internal/service/plan"
+	"deepspace/internal/service/risk"
 	"deepspace/internal/service/usage"
 
 	"github.com/gin-gonic/gin"
@@ -31,15 +32,16 @@ type ProxyHandler struct {
 	newapi  *newapi.Client
 	model   *modelservice.Service
 	plan    *planservice.Service
+	risk    *risk.Service
 }
 
-func NewProxyHandler(billingSvc *billing.Service, usageSvc *usage.Service, newapiClient *newapi.Client, modelSvc *modelservice.Service, planSvc *planservice.Service) *ProxyHandler {
-	return &ProxyHandler{billing: billingSvc, usage: usageSvc, newapi: newapiClient, model: modelSvc, plan: planSvc}
+func NewProxyHandler(billingSvc *billing.Service, usageSvc *usage.Service, riskSvc *risk.Service, newapiClient *newapi.Client, modelSvc *modelservice.Service, planSvc *planservice.Service) *ProxyHandler {
+	return &ProxyHandler{billing: billingSvc, usage: usageSvc, risk: riskSvc, newapi: newapiClient, model: modelSvc, plan: planSvc}
 }
 
 // Handle godoc
 // @Summary 代理 NewAPI
-// @Description 转发 /v1 下的请求到 NewAPI
+// @Description 转发 /v1 下的请求到 NewAPI（不支持 /v1/models，且会校验模型是否允许）
 // @Tags 代理
 // @Accept json
 // @Produce json
@@ -48,6 +50,7 @@ func NewProxyHandler(billingSvc *billing.Service, usageSvc *usage.Service, newap
 // @Param path path string true "转发路径"
 // @Success 200 {object} map[string]interface{} "代理成功"
 // @Failure 400 {object} map[string]interface{} "请求错误"
+// @Failure 404 {object} map[string]interface{} "接口不存在"
 // @Failure 401 {object} map[string]interface{} "未登录"
 // @Failure 402 {object} map[string]interface{} "余额不足"
 // @Failure 500 {object} map[string]interface{} "服务内部错误"
@@ -69,7 +72,7 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 	}
 
 	if isModelListRequest(c) {
-		h.newapi.Proxy(c)
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return
 	}
 
@@ -93,7 +96,6 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 	}
 
 	modelName := peekModelFromBody(c)
-	modelID := ""
 
 	state := pipeline.NewState()
 	state.UserID = userID
@@ -107,35 +109,51 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ref_id is required for billing"})
 		return
 	}
-	if h.model != nil && modelName != "" {
-		items, err := h.model.ListAll(c.Request.Context())
-		if err == nil {
-			for _, item := range items {
-				if item.Name == modelName {
-					modelID = item.ID
-					state.Meta["price_input"] = item.PriceInput
-					state.Meta["price_output"] = item.PriceOutput
-					state.Meta["currency"] = item.Currency
-					break
-				}
-			}
-		}
+	modelName = strings.TrimSpace(modelName)
+	if modelName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "model is required"})
+		return
 	}
-	if h.plan != nil {
-		price, ok, err := h.plan.GetActivePlanPrice(c.Request.Context(), userID, modelID, time.Now().UTC())
-		if err == nil && ok && price != nil {
-			state.Meta["plan_applied"] = true
-			state.Meta["plan_id"] = price.PlanID
-			state.Meta["plan_billing_mode"] = price.BillingMode
-			state.Meta["plan_currency"] = price.Currency
-			state.Meta["plan_price_input"] = price.PriceInput
-			state.Meta["plan_price_output"] = price.PriceOutput
-			state.Meta["plan_price_request"] = price.PriceRequest
+	if h.model != nil {
+		item, err := h.model.GetActiveByName(c.Request.Context(), modelName)
+		if err != nil {
+			respondInternal(c, "failed to load model")
+			return
 		}
+		if item == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "model not allowed"})
+			return
+		}
+		state.Meta["price_input"] = item.PriceInput
+		state.Meta["price_output"] = item.PriceOutput
+		state.Meta["currency"] = item.Currency
 	}
 	if value, ok := c.Get("trace_id"); ok {
 		if v, ok := value.(string); ok {
 			state.TraceID = v
+		}
+	}
+	state.Meta["client_ip"] = c.ClientIP()
+	if value, ok := c.Get("project_id"); ok {
+		switch v := value.(type) {
+		case int64:
+			if v > 0 {
+				state.ProjectID = &v
+			}
+		case int:
+			if v > 0 {
+				parsed := int64(v)
+				state.ProjectID = &parsed
+			}
+		case float64:
+			if v > 0 {
+				parsed := int64(v)
+				state.ProjectID = &parsed
+			}
+		case string:
+			if parsed, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64); err == nil && parsed > 0 {
+				state.ProjectID = &parsed
+			}
 		}
 	}
 	if state.RefID == "" && state.TraceID != "" {
@@ -144,11 +162,20 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 
 	pre := pipeline.New(
 		steps.NewAuth(),
-		steps.NewPolicy(),
+		steps.NewPolicy(h.risk, h.usage),
 		steps.NewBudgetHold(h.billing),
 	)
 	if err := pre.Run(c.Request.Context(), state); err != nil {
-		respondBillingError(c, err)
+		switch {
+		case errors.Is(err, steps.ErrRiskIPDenied):
+			c.JSON(http.StatusForbidden, gin.H{"error": "IP 已被限制"})
+		case errors.Is(err, steps.ErrRiskRateLimited):
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "请求过于频繁"})
+		case errors.Is(err, steps.ErrRiskBudgetExceeded):
+			c.JSON(http.StatusPaymentRequired, gin.H{"error": "预算已超限"})
+		default:
+			respondBillingError(c, err)
+		}
 		return
 	}
 
@@ -161,7 +188,7 @@ func (h *ProxyHandler) Handle(c *gin.Context) {
 	}
 
 	post := pipeline.New(
-		steps.NewUsageCapture(h.billing, h.usage),
+		steps.NewUsageCapture(h.billing, h.usage, h.plan),
 	)
 	_ = post.Run(c.Request.Context(), state)
 }

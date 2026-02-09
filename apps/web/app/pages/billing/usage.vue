@@ -1,4 +1,7 @@
 <script setup lang="ts">
+useHead({
+  title: "Usage 明细 - Deepspace Workflow",
+})
 const requestHeaders = useRequestHeaders(['cookie'])
 
 type UsageRecord = {

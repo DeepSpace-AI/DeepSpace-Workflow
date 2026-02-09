@@ -1,4 +1,8 @@
 <script setup lang="ts">
+useHead({
+  title: "知识库详情 - Deepspace Workflow",
+})
+
 type KnowledgeBaseItem = {
   id: number
   name: string

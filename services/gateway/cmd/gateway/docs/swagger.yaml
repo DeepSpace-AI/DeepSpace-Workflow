@@ -1,5 +1,19 @@
 basePath: /api
 definitions:
+  handlers.adminTopUpRequest:
+    properties:
+      amount:
+        type: number
+      currency:
+        type: string
+      metadata:
+        additionalProperties: {}
+        type: object
+      ref_id:
+        type: string
+      user_id:
+        type: integer
+    type: object
   handlers.billingRequest:
     properties:
       amount:
@@ -8,6 +22,30 @@ definitions:
         additionalProperties: {}
         type: object
       ref_id:
+        type: string
+    type: object
+  handlers.budgetCapCreateRequest:
+    properties:
+      currency:
+        type: string
+      cycle:
+        type: string
+      max_cost:
+        type: number
+      policy_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  handlers.budgetCapUpdateRequest:
+    properties:
+      currency:
+        type: string
+      cycle:
+        type: string
+      max_cost:
+        type: number
+      status:
         type: string
     type: object
   handlers.changePasswordRequest:
@@ -89,6 +127,14 @@ definitions:
         type: string
     type: object
   handlers.createWorkflowRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      steps:
+        items: {}
+        type: array
     type: object
   handlers.enqueueEmailRequest:
     properties:
@@ -96,6 +142,30 @@ definitions:
         items:
           $ref: '#/definitions/handlers.sendEmailRequest'
         type: array
+    type: object
+  handlers.ipRuleCreateRequest:
+    properties:
+      cidr:
+        type: string
+      ip:
+        type: string
+      policy_id:
+        type: integer
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  handlers.ipRuleUpdateRequest:
+    properties:
+      cidr:
+        type: string
+      ip:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
     type: object
   handlers.loginRequest:
     properties:
@@ -193,39 +263,75 @@ definitions:
       status:
         type: string
     type: object
+  handlers.passwordResetConfirmRequest:
+    properties:
+      new_password:
+        type: string
+      token:
+        type: string
+    type: object
+  handlers.passwordResetRequest:
+    properties:
+      email:
+        type: string
+    type: object
   handlers.planCreateRequest:
     properties:
-      billing_mode:
-        type: string
       currency:
         type: string
+      included_requests:
+        type: integer
+      included_tokens:
+        type: integer
       name:
         type: string
-      price_input:
+      price:
         type: number
-      price_output:
-        type: number
-      price_request:
-        type: number
+      reset_interval_days:
+        type: integer
       status:
         type: string
     type: object
   handlers.planUpdateRequest:
     properties:
-      billing_mode:
-        type: string
       currency:
         type: string
+      included_requests:
+        type: integer
+      included_tokens:
+        type: integer
       name:
         type: string
-      price_input:
+      price:
         type: number
-      price_output:
-        type: number
-      price_request:
-        type: number
+      reset_interval_days:
+        type: integer
       status:
         type: string
+    type: object
+  handlers.rateLimitCreateRequest:
+    properties:
+      max_requests:
+        type: integer
+      max_tokens:
+        type: integer
+      policy_id:
+        type: integer
+      status:
+        type: string
+      window_seconds:
+        type: integer
+    type: object
+  handlers.rateLimitUpdateRequest:
+    properties:
+      max_requests:
+        type: integer
+      max_tokens:
+        type: integer
+      status:
+        type: string
+      window_seconds:
+        type: integer
     type: object
   handlers.registerRequest:
     properties:
@@ -233,6 +339,36 @@ definitions:
         type: string
       password:
         type: string
+    type: object
+  handlers.riskPolicyCreateRequest:
+    properties:
+      name:
+        type: string
+      priority:
+        type: integer
+      project_id:
+        type: integer
+      scope:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  handlers.riskPolicyUpdateRequest:
+    properties:
+      name:
+        type: string
+      priority:
+        type: integer
+      project_id:
+        type: integer
+      scope:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: integer
     type: object
   handlers.sendEmailRequest:
     properties:
@@ -368,6 +504,14 @@ definitions:
         type: string
     type: object
   handlers.updateWorkflowRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      steps:
+        items: {}
+        type: array
     type: object
   newapi.UpstreamModel:
     properties:
@@ -382,6 +526,233 @@ info:
   title: DeepSpace Gateway API
   version: "1.0"
 paths:
+  /admin/billing/topups:
+    post:
+      consumes:
+      - application/json
+      description: 管理员给指定用户充值或冲正余额
+      parameters:
+      - description: 充值信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.adminTopUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 充值成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: 引用冲突
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：系统充值
+      tags:
+      - 管理-计费
+  /admin/billing/transactions:
+    get:
+      consumes:
+      - application/json
+      description: 获取交易流水
+      parameters:
+      - description: 用户ID
+        in: query
+        name: user_id
+        type: integer
+      - description: 类型（hold/capture/release）
+        in: query
+        name: type
+        type: string
+      - description: 开始时间（RFC3339）
+        in: query
+        name: start
+        type: string
+      - description: 结束时间（RFC3339）
+        in: query
+        name: end
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：交易流水
+      tags:
+      - 管理-计费
+  /admin/billing/usage:
+    get:
+      consumes:
+      - application/json
+      description: 获取用量记录
+      parameters:
+      - description: 用户ID
+        in: query
+        name: user_id
+        type: integer
+      - description: 开始时间（RFC3339）
+        in: query
+        name: start
+        type: string
+      - description: 结束时间（RFC3339）
+        in: query
+        name: end
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：用量记录
+      tags:
+      - 管理-计费
+  /admin/billing/wallets:
+    get:
+      consumes:
+      - application/json
+      description: 获取钱包列表
+      parameters:
+      - description: 用户ID
+        in: query
+        name: user_id
+        type: integer
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：钱包列表
+      tags:
+      - 管理-计费
   /admin/models:
     get:
       consumes:
@@ -821,6 +1192,822 @@ paths:
       summary: 管理员：更新套餐
       tags:
       - 管理-套餐
+  /admin/risk/budget-caps:
+    get:
+      consumes:
+      - application/json
+      description: 获取预算上限列表
+      parameters:
+      - description: 策略ID
+        in: query
+        name: policy_id
+        type: integer
+      - description: 状态（active/disabled）
+        in: query
+        name: status
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：预算上限列表
+      tags:
+      - 管理-风控
+    post:
+      consumes:
+      - application/json
+      description: 创建预算上限
+      parameters:
+      - description: 预算上限数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.budgetCapCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建预算上限
+      tags:
+      - 管理-风控
+  /admin/risk/budget-caps/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除预算上限
+      parameters:
+      - description: 预算上限ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：删除预算上限
+      tags:
+      - 管理-风控
+    patch:
+      consumes:
+      - application/json
+      description: 更新预算上限
+      parameters:
+      - description: 预算上限ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 预算上限更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.budgetCapUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 预算上限不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新预算上限
+      tags:
+      - 管理-风控
+  /admin/risk/ip-rules:
+    get:
+      consumes:
+      - application/json
+      description: 获取 IP 黑白名单
+      parameters:
+      - description: 策略ID
+        in: query
+        name: policy_id
+        type: integer
+      - description: 类型（allow/deny）
+        in: query
+        name: type
+        type: string
+      - description: 状态（active/disabled）
+        in: query
+        name: status
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：IP 规则列表
+      tags:
+      - 管理-风控
+    post:
+      consumes:
+      - application/json
+      description: 创建 IP 黑白名单规则
+      parameters:
+      - description: IP 规则数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ipRuleCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建 IP 规则
+      tags:
+      - 管理-风控
+  /admin/risk/ip-rules/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除 IP 黑白名单规则
+      parameters:
+      - description: IP 规则ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：删除 IP 规则
+      tags:
+      - 管理-风控
+    patch:
+      consumes:
+      - application/json
+      description: 更新 IP 黑白名单规则
+      parameters:
+      - description: IP 规则ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: IP 规则更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ipRuleUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: IP 规则不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新 IP 规则
+      tags:
+      - 管理-风控
+  /admin/risk/policies:
+    get:
+      consumes:
+      - application/json
+      description: 获取风控策略列表
+      parameters:
+      - description: 作用域（global/user/project）
+        in: query
+        name: scope
+        type: string
+      - description: 用户ID
+        in: query
+        name: user_id
+        type: integer
+      - description: 项目ID
+        in: query
+        name: project_id
+        type: integer
+      - description: 状态（active/disabled）
+        in: query
+        name: status
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：风控策略列表
+      tags:
+      - 管理-风控
+    post:
+      consumes:
+      - application/json
+      description: 创建风控策略
+      parameters:
+      - description: 策略数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.riskPolicyCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建风控策略
+      tags:
+      - 管理-风控
+  /admin/risk/policies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除风控策略
+      parameters:
+      - description: 策略ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：删除风控策略
+      tags:
+      - 管理-风控
+    patch:
+      consumes:
+      - application/json
+      description: 更新风控策略
+      parameters:
+      - description: 策略ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 策略更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.riskPolicyUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 策略不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新风控策略
+      tags:
+      - 管理-风控
+  /admin/risk/rate-limits:
+    get:
+      consumes:
+      - application/json
+      description: 获取速率限制列表
+      parameters:
+      - description: 策略ID
+        in: query
+        name: policy_id
+        type: integer
+      - description: 状态（active/disabled）
+        in: query
+        name: status
+        type: string
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：速率限制列表
+      tags:
+      - 管理-风控
+    post:
+      consumes:
+      - application/json
+      description: 创建速率限制
+      parameters:
+      - description: 速率限制数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.rateLimitCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 创建成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：创建速率限制
+      tags:
+      - 管理-风控
+  /admin/risk/rate-limits/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除速率限制
+      parameters:
+      - description: 速率限制ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 删除成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：删除速率限制
+      tags:
+      - 管理-风控
+    patch:
+      consumes:
+      - application/json
+      description: 更新速率限制
+      parameters:
+      - description: 速率限制ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 速率限制更新数据
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.rateLimitUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 未登录
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: 无权限
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 速率限制不存在
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: 管理员：更新速率限制
+      tags:
+      - 管理-风控
   /admin/subscriptions:
     post:
       consumes:
@@ -1308,6 +2495,82 @@ paths:
       - bearerAuth: []
       - cookieAuth: []
       summary: 获取当前用户
+      tags:
+      - 认证
+  /auth/password-reset/confirm:
+    post:
+      consumes:
+      - application/json
+      description: 校验重置令牌并更新密码
+      parameters:
+      - description: 重置确认
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.passwordResetConfirmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 重置成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: 服务不可用
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 确认重置密码
+      tags:
+      - 认证
+  /auth/password-reset/request:
+    post:
+      consumes:
+      - application/json
+      description: 发送重置密码邮件
+      parameters:
+      - description: 重置请求
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.passwordResetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 请求成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: 请求错误
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: 服务不可用
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 申请重置密码
       tags:
       - 认证
   /auth/register:
@@ -2389,6 +3652,27 @@ paths:
       summary: 模型提供商列表
       tags:
       - 模型
+  /plans:
+    get:
+      consumes:
+      - application/json
+      description: 获取可用套餐列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 服务内部错误
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 套餐列表
+      tags:
+      - 套餐
   /projects:
     get:
       consumes:
@@ -3454,7 +4738,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: 转发 /v1 下的请求到 NewAPI
+      description: 转发 /v1 下的请求到 NewAPI（不支持 /v1/models，且会校验模型是否允许）
       parameters:
       - description: 转发路径
         in: path
@@ -3481,6 +4765,11 @@ paths:
             type: object
         "402":
           description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 接口不存在
           schema:
             additionalProperties: true
             type: object
@@ -3498,7 +4787,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 转发 /v1 下的请求到 NewAPI
+      description: 转发 /v1 下的请求到 NewAPI（不支持 /v1/models，且会校验模型是否允许）
       parameters:
       - description: 转发路径
         in: path
@@ -3525,6 +4814,11 @@ paths:
             type: object
         "402":
           description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 接口不存在
           schema:
             additionalProperties: true
             type: object
@@ -3542,7 +4836,7 @@ paths:
     patch:
       consumes:
       - application/json
-      description: 转发 /v1 下的请求到 NewAPI
+      description: 转发 /v1 下的请求到 NewAPI（不支持 /v1/models，且会校验模型是否允许）
       parameters:
       - description: 转发路径
         in: path
@@ -3569,6 +4863,11 @@ paths:
             type: object
         "402":
           description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 接口不存在
           schema:
             additionalProperties: true
             type: object
@@ -3586,7 +4885,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 转发 /v1 下的请求到 NewAPI
+      description: 转发 /v1 下的请求到 NewAPI（不支持 /v1/models，且会校验模型是否允许）
       parameters:
       - description: 转发路径
         in: path
@@ -3613,6 +4912,11 @@ paths:
             type: object
         "402":
           description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 接口不存在
           schema:
             additionalProperties: true
             type: object
@@ -3630,7 +4934,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: 转发 /v1 下的请求到 NewAPI
+      description: 转发 /v1 下的请求到 NewAPI（不支持 /v1/models，且会校验模型是否允许）
       parameters:
       - description: 转发路径
         in: path
@@ -3657,6 +4961,11 @@ paths:
             type: object
         "402":
           description: 余额不足
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: 接口不存在
           schema:
             additionalProperties: true
             type: object

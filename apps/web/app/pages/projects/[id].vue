@@ -6,6 +6,10 @@ definePageMeta({
     layout: 'editor',
 })
 
+useHead({
+  title: "项目详情 - Deepspace Workflow",
+})
+
 const route = useRoute()
 const projectId = String(route.params.id)
 const requestHeaders = useRequestHeaders(['cookie'])

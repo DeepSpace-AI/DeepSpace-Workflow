@@ -14,6 +14,10 @@ type ProjectItem = {
   name: string
 }
 
+useHead({
+  title: "知识库管理 - Deepspace Workflow",
+})
+
 const scope = ref("all")
 const projectId = ref<string | null>(null)
 const showCreate = ref(false)

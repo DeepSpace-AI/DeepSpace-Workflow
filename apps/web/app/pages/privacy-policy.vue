@@ -52,3 +52,9 @@
     </UContainer>
   </div>
 </template>
+<script setup lang="ts">
+definePageMeta({ layout: false })
+useHead({
+  title: "隐私政策 - Deepspace Workflow",
+})
+</script>

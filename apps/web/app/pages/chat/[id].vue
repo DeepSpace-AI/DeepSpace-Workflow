@@ -2,6 +2,9 @@
 definePageMeta({
   layout: 'editor',
 })
+useHead({
+  title: "智能助手 - Deepspace Workflow",
+})
 
 const route = useRoute()
 const router = useRouter()
@@ -116,7 +119,7 @@ async function handleDraw(prompt: string) {
 </script>
 
 <template>
-  <div class="flex h-[calc(100vh-var(--ui-header-height))] min-h-0 overflow-hidden">
+  <div class="flex h-[calc(100vh-var(--ui-header-height))] min-h-0 overflow-hidden bg-neutral-100 dark:bg-neutral-950">
     <ChatSider
       :conversations="conversations.conversationOptions.value"
       :active-conversation-id="conversations.activeConversationId.value"

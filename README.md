@@ -127,7 +127,43 @@ go run ./cmd/worker
 
 主要配置项见 `.env.example` 的 Worker/邮件部分。
 
-## 8. Roadmap（简化）
+## 8. Docker 运行
+
+使用 Docker Compose 启动（Web/Admin 对外暴露，Gateway 仅内网访问）：
+
+```
+docker compose --env-file .env.docker up -d --build
+```
+
+首次运行初始化管理员用户（确保数据库已启动）：
+
+```
+docker compose --env-file .env.docker run --rm \
+  -e ADMIN_EMAIL=admin@example.com \
+  -e ADMIN_PASSWORD=change-me \
+  -e ADMIN_DISPLAY_NAME=管理员 \
+  gateway /app/admin-init
+```
+
+默认端口：
+
+* Web: http://localhost:8080
+* Admin: http://localhost:8081
+
+关键环境变量说明（见 `.env.docker`）：
+
+* `NEWAPI_BASE_URL`：NewAPI 服务地址（生产环境需要修改为真实地址）
+* `JWT_SECRET`：JWT 密钥（生产环境必须替换）
+* 邮件相关变量：`EMAIL_FROM_ADDRESS`、`SMTP_HOST`、`SMTP_USER`、`SMTP_PASSWORD` 必须填写真实值
+
+停止与清理：
+
+```
+docker compose down
+```
+
+
+## 9. Roadmap（简化）
 
 1. Chat + Gateway + Billing MVP
 2. Project + RAG（科研最小闭环）
@@ -135,7 +171,7 @@ go run ./cmd/worker
 4. MCP / Skills 扩展
 
 
-## 9.目录结构
+## 10.目录结构
 
 ```
 deepspace-workflows/

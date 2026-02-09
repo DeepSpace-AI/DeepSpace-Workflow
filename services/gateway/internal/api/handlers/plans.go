@@ -19,23 +19,47 @@ func NewPlanHandler(svc *planservice.Service) *PlanHandler {
 }
 
 type planCreateRequest struct {
-	Name         string  `json:"name"`
-	Status       string  `json:"status"`
-	Currency     string  `json:"currency"`
-	BillingMode  string  `json:"billing_mode"`
-	PriceInput   float64 `json:"price_input"`
-	PriceOutput  float64 `json:"price_output"`
-	PriceRequest float64 `json:"price_request"`
+	Name              string  `json:"name"`
+	Status            string  `json:"status"`
+	IncludedTokens    int64   `json:"included_tokens"`
+	IncludedRequests  int64   `json:"included_requests"`
+	ResetIntervalDays int     `json:"reset_interval_days"`
+	Price             float64 `json:"price"`
+	Currency          string  `json:"currency"`
 }
 
 type planUpdateRequest struct {
-	Name         *string  `json:"name"`
-	Status       *string  `json:"status"`
-	Currency     *string  `json:"currency"`
-	BillingMode  *string  `json:"billing_mode"`
-	PriceInput   *float64 `json:"price_input"`
-	PriceOutput  *float64 `json:"price_output"`
-	PriceRequest *float64 `json:"price_request"`
+	Name              *string  `json:"name"`
+	Status            *string  `json:"status"`
+	IncludedTokens    *int64   `json:"included_tokens"`
+	IncludedRequests  *int64   `json:"included_requests"`
+	ResetIntervalDays *int     `json:"reset_interval_days"`
+	Price             *float64 `json:"price"`
+	Currency          *string  `json:"currency"`
+}
+
+// ListPublic godoc
+// @Summary 套餐列表
+// @Description 获取可用套餐列表
+// @Tags 套餐
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "获取成功"
+// @Failure 500 {object} map[string]interface{} "服务内部错误"
+// @Router /plans [get]
+func (h *PlanHandler) ListPublic(c *gin.Context) {
+	if h == nil || h.svc == nil {
+		respondInternal(c, "套餐服务未配置")
+		return
+	}
+
+	items, err := h.svc.ListActivePlans(c.Request.Context())
+	if err != nil {
+		respondInternal(c, "获取套餐失败")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
 // List godoc
@@ -94,13 +118,13 @@ func (h *PlanHandler) Create(c *gin.Context) {
 	}
 
 	item, err := h.svc.CreatePlan(c.Request.Context(), planservice.PlanCreateInput{
-		Name:         strings.TrimSpace(req.Name),
-		Status:       strings.TrimSpace(req.Status),
-		Currency:     strings.TrimSpace(req.Currency),
-		BillingMode:  strings.TrimSpace(req.BillingMode),
-		PriceInput:   req.PriceInput,
-		PriceOutput:  req.PriceOutput,
-		PriceRequest: req.PriceRequest,
+		Name:              strings.TrimSpace(req.Name),
+		Status:            strings.TrimSpace(req.Status),
+		IncludedTokens:    req.IncludedTokens,
+		IncludedRequests:  req.IncludedRequests,
+		ResetIntervalDays: req.ResetIntervalDays,
+		Price:             req.Price,
+		Currency:          strings.TrimSpace(req.Currency),
 	})
 	if err != nil {
 		handlePlanError(c, err)
@@ -146,13 +170,13 @@ func (h *PlanHandler) Update(c *gin.Context) {
 	}
 
 	item, err := h.svc.UpdatePlan(c.Request.Context(), id, planservice.PlanUpdateInput{
-		Name:         req.Name,
-		Status:       req.Status,
-		Currency:     req.Currency,
-		BillingMode:  req.BillingMode,
-		PriceInput:   req.PriceInput,
-		PriceOutput:  req.PriceOutput,
-		PriceRequest: req.PriceRequest,
+		Name:              req.Name,
+		Status:            req.Status,
+		IncludedTokens:    req.IncludedTokens,
+		IncludedRequests:  req.IncludedRequests,
+		ResetIntervalDays: req.ResetIntervalDays,
+		Price:             req.Price,
+		Currency:          req.Currency,
 	})
 	if err != nil {
 		handlePlanError(c, err)
@@ -171,12 +195,14 @@ func handlePlanError(c *gin.Context, err error) {
 	switch err {
 	case planservice.ErrInvalidPlanName:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "套餐名称不正确"})
-	case planservice.ErrInvalidBillingMode:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "计费模式不正确"})
+	case planservice.ErrInvalidPlanQuota:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "套餐配额不正确"})
+	case planservice.ErrInvalidPlanCycle:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "重置周期不正确"})
 	case planservice.ErrInvalidPlanPrice:
 		c.JSON(http.StatusBadRequest, gin.H{"error": "套餐价格不正确"})
 	case planservice.ErrInvalidPlanCurrency:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "货币类型不正确"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "价格单位不正确"})
 	case planservice.ErrPlanNotFound:
 		c.JSON(http.StatusNotFound, gin.H{"error": "套餐不存在"})
 	default:

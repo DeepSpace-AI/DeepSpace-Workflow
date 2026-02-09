@@ -164,6 +164,22 @@ func (s *Service) ListProviders(ctx context.Context, activeOnly bool) ([]string,
 	return s.repo.ListProviders(ctx, activeOnly)
 }
 
+func (s *Service) GetActiveByName(ctx context.Context, name string) (*ModelItem, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, ErrModelNotFound
+	}
+	item, err := s.repo.GetActiveByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	if item == nil {
+		return nil, nil
+	}
+	mapped := mapModelItem(item)
+	return &mapped, nil
+}
+
 func (s *Service) Create(ctx context.Context, input CreateInput) (*ModelItem, error) {
 	name := strings.TrimSpace(input.Name)
 	if name == "" {

@@ -31,7 +31,9 @@
         </UFormField>
 
         <UFormField class="text-right">
-          <NuxtLink class="text-sm text-primary" to="/forgot-password">忘记密码？</NuxtLink>
+          <UButton color="neutral" variant="link" size="sm" class="px-0" type="button" @click="openResetModal">
+            忘记密码？
+          </UButton>
         </UFormField>
 
         <UButton class="w-full flex items-center justify-center" color="primary" :loading="loading" type="submit">
@@ -49,15 +51,45 @@
       </div>
     </UCard>
   </div>
+
+  <UModal v-model:open="resetModalOpen">
+    <template #content>
+      <div class="p-6 space-y-4">
+        <h3 class="text-lg font-semibold">找回密码</h3>
+        <p class="text-sm text-muted">输入你的注册邮箱，我们会发送重置密码链接。</p>
+        <UForm class="space-y-3" @submit.prevent="submitResetRequest">
+          <UFormField required label="邮箱" name="resetEmail">
+            <UInput v-model="resetEmail" type="email" placeholder="请输入注册邮箱" />
+          </UFormField>
+
+          <p v-if="resetError" class="text-sm text-red-500">{{ resetError }}</p>
+          <p v-else-if="resetSuccess" class="text-sm text-green-600 dark:text-green-400">{{ resetSuccess }}</p>
+
+          <div class="flex justify-end gap-2">
+            <UButton color="neutral" variant="outline" type="button" @click="resetModalOpen = false">取消</UButton>
+            <UButton type="submit" :loading="resetLoading">发送重置邮件</UButton>
+          </div>
+        </UForm>
+      </div>
+    </template>
+  </UModal>
 </template>
 <script setup lang="ts">
 definePageMeta({ layout: false })
+useHead({
+  title: "登录 - Deepspace Workflow",
+})
 
 const email = ref('')
 const password = ref('')
 const show = ref(false)
 const loading = ref(false)
 const error = ref('')
+const resetModalOpen = ref(false)
+const resetEmail = ref('')
+const resetLoading = ref(false)
+const resetError = ref('')
+const resetSuccess = ref('')
 
 const validateEmail = (value: string) => {
   const trimmed = value.trim()
@@ -98,6 +130,36 @@ const submit = async () => {
     error.value = err?.data?.message || '登录失败'
   } finally {
     loading.value = false
+  }
+}
+
+const openResetModal = () => {
+  resetModalOpen.value = true
+  resetEmail.value = email.value.trim()
+  resetError.value = ''
+  resetSuccess.value = ''
+}
+
+const submitResetRequest = async () => {
+  resetError.value = ''
+  resetSuccess.value = ''
+  const emailError = validateEmail(resetEmail.value)
+  if (emailError) {
+    resetError.value = emailError
+    return
+  }
+
+  resetLoading.value = true
+  try {
+    await $fetch('/api/auth/password-reset/request', {
+      method: 'POST',
+      body: { email: resetEmail.value.trim() }
+    })
+    resetSuccess.value = '重置邮件已发送，请检查你的邮箱。'
+  } catch (err: any) {
+    resetError.value = err?.data?.message || err?.data?.error || '发送失败，请稍后重试'
+  } finally {
+    resetLoading.value = false
   }
 }
 </script>

@@ -5,6 +5,7 @@ type State struct {
 	ResponseBody          []byte
 	TraceID               string
 	UserID                int64
+	ProjectID             *int64
 	Model                 string
 	CostAmount            float64
 	UsagePromptTokens     int

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -55,9 +56,9 @@ func (h *ProjectWorkflowHandler) List(c *gin.Context) {
 }
 
 type createWorkflowRequest struct {
-	Name        string         `json:"name"`
-	Description *string        `json:"description"`
-	Steps       datatypes.JSON `json:"steps"`
+	Name        string  `json:"name"`
+	Description *string `json:"description"`
+	Steps       []any   `json:"steps"`
 }
 
 // Create godoc
@@ -94,7 +95,13 @@ func (h *ProjectWorkflowHandler) Create(c *gin.Context) {
 		return
 	}
 
-	item, err := h.svc.Create(c.Request.Context(), orgID, projectID, req.Name, req.Description, req.Steps)
+	stepsBytes, err := json.Marshal(req.Steps)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid steps"})
+		return
+	}
+
+	item, err := h.svc.Create(c.Request.Context(), orgID, projectID, req.Name, req.Description, datatypes.JSON(stepsBytes))
 	if err != nil {
 		if err == projectworkflow.ErrInvalidName {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid name"})
@@ -108,9 +115,9 @@ func (h *ProjectWorkflowHandler) Create(c *gin.Context) {
 }
 
 type updateWorkflowRequest struct {
-	Name        *string         `json:"name"`
-	Description *string         `json:"description"`
-	Steps       *datatypes.JSON `json:"steps"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Steps       *[]any  `json:"steps"`
 }
 
 // Update godoc
@@ -155,7 +162,18 @@ func (h *ProjectWorkflowHandler) Update(c *gin.Context) {
 		return
 	}
 
-	item, err := h.svc.Update(c.Request.Context(), orgID, projectID, workflowID, req.Name, req.Description, req.Steps)
+	var steps *datatypes.JSON
+	if req.Steps != nil {
+		stepsBytes, err := json.Marshal(*req.Steps)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid steps"})
+			return
+		}
+		converted := datatypes.JSON(stepsBytes)
+		steps = &converted
+	}
+
+	item, err := h.svc.Update(c.Request.Context(), orgID, projectID, workflowID, req.Name, req.Description, steps)
 	if err != nil {
 		switch err {
 		case projectworkflow.ErrInvalidName:

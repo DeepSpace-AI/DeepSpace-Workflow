@@ -43,9 +43,9 @@ type Config struct {
 	SMTPPassword     string
 	SMTPUseTLS       bool
 	EmailTemplateDir string
-	RedisEnabled     bool
 	RedisURL         string
 	RedisQueueKey    string
+	WebBaseURL       string
 }
 
 func Load() *Config {
@@ -91,9 +91,9 @@ func Load() *Config {
 		SMTPUseTLS:       getEnvBool("SMTP_USE_TLS", true),
 		EmailTemplateDir: getEnv("EMAIL_TEMPLATE_DIR", "../../templates"),
 
-		RedisEnabled:  getEnvBool("REDIS_ENABLED", false),
 		RedisURL:      getEnv("REDIS_URL", ""),
 		RedisQueueKey: getEnv("REDIS_QUEUE_KEY", "email:queue"),
+		WebBaseURL:    getEnv("WEB_BASE_URL", ""),
 	}
 }
 
@@ -168,10 +168,7 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("SMTP_PORT must be positive")
 		}
 	}
-	if c.RedisEnabled {
-		if strings.TrimSpace(c.RedisURL) == "" {
-			return fmt.Errorf("REDIS_URL is required")
-		}
+	if strings.TrimSpace(c.RedisURL) != "" {
 		if strings.TrimSpace(c.RedisQueueKey) == "" {
 			return fmt.Errorf("REDIS_QUEUE_KEY is required")
 		}

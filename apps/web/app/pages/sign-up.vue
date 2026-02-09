@@ -51,6 +51,9 @@
 </template>
 <script setup lang="ts">
 definePageMeta({ layout: false })
+useHead({
+  title: "注册 - Deepspace Workflow",
+})
 
 const orgName = ref('')
 const email = ref('')

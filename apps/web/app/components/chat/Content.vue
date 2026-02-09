@@ -126,8 +126,8 @@ function submitDraw() {
 </script>
 
 <template>
-  <div class="flex-1 min-h-0 flex flex-col overflow-hidden">
-    <div v-if="!props.chatId" class="mx-auto min-w-3xl">
+  <div class="flex-1 min-h-0 flex flex-col overflow-hidden bg-default">
+    <div v-if="!props.chatId" class="mx-auto min-w-3xl px-6 py-6">
       <div class="my-12 text-center">
         <h1 class="text-2xl font-black">与你一起创建无限可能</h1>
       </div>
@@ -140,9 +140,7 @@ function submitDraw() {
             <USelectMenu placeholder="请选择模型" :model-value="props.model" :items="props.models"
               :ui="{ content: 'min-w-fit' }" @update:model-value="emit('update:model', String($event || ''))" />
             <UTooltip text="绘画">
-              <UButton icon="i-lucide-image" variant="ghost" color="neutral" size="sm" @click="openDrawModal">
-                绘画
-              </UButton>
+              <UButton icon="i-lucide-image" variant="ghost" color="neutral" size="sm" @click="openDrawModal" />
             </UTooltip>
             <UPopover>
               <UTooltip text="对话参数">
@@ -220,8 +218,8 @@ function submitDraw() {
       </div>
     </div>
 
-    <div v-else class="flex-1 min-h-0 flex flex-col w-full">
-      <div class="chat-scrollbar flex-1 min-h-0 overflow-y-auto">
+    <div v-else class="flex-1 min-h-0 flex flex-col w-full px-4 pt-4">
+      <div class="chat-scrollbar flex-1 min-h-0 overflow-y-auto rounded-t-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/60">
         <UChatMessages class="p-6" :assistant="{
           side: 'left',
           variant: 'outline',
@@ -237,7 +235,7 @@ function submitDraw() {
         </UChatMessages>
       </div>
 
-      <div class="shrink-0 px-6 pt-2">
+      <div class="shrink-0 px-6 pt-3 pb-2 rounded-b-2xl border-x border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
         <UChatPrompt v-model="input" placeholder="有问题尽管问" variant="soft" @submit="onSubmit"
           :error="props.error || undefined">
           <UChatPromptSubmit icon="i-lucide:send" size="sm" :status="props.status" />
@@ -246,9 +244,7 @@ function submitDraw() {
               <USelectMenu placeholder="请选择模型" :model-value="props.model" :items="props.models"
                 :ui="{ content: 'min-w-fit' }" @update:model-value="emit('update:model', String($event || ''))" />
               <UTooltip text="绘画">
-                <UButton icon="i-lucide-image" variant="ghost" color="neutral" size="sm" @click="openDrawModal">
-                  绘画
-                </UButton>
+                <UButton icon="i-lucide-image" variant="ghost" color="neutral" size="sm" @click="openDrawModal" />
               </UTooltip>
               <UPopover>
                 <UTooltip text="对话参数">

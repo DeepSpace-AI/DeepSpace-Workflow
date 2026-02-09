@@ -178,7 +178,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+useHead({
+  title: "项目中心 - Deepspace Workflow",
+})
 
 type ProjectItem = {
     id: number

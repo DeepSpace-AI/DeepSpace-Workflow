@@ -127,6 +127,21 @@ func (r *ModelRepo) GetByName(ctx context.Context, name string) (*model.Model, e
 	return &item, nil
 }
 
+func (r *ModelRepo) GetActiveByName(ctx context.Context, name string) (*model.Model, error) {
+	var item model.Model
+	err := r.db.WithContext(ctx).
+		Where("name = ?", name).
+		Where("status = ?", "active").
+		First(&item).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &item, nil
+}
+
 func (r *ModelRepo) GetByNameProvider(ctx context.Context, name, provider string) (*model.Model, error) {
 	var item model.Model
 	err := r.db.WithContext(ctx).

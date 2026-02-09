@@ -3,6 +3,9 @@ import type { NavigationMenuItem, DropdownMenuItem } from '@nuxt/ui';
 import { zh_cn } from '@nuxt/ui/locale'
 
 const route = useRoute();
+const { data: currentUser } = await useAsyncData('layout-current-user-default', () =>
+    $fetch<Record<string, any> | null>('/api/users/me').catch(() => null),
+);
 
 const items = computed<NavigationMenuItem[]>(() => [
     {
@@ -50,6 +53,27 @@ const dropdownItems = computed<DropdownMenuItem[]>(() => [
     },
 ]);
 
+const userName = computed(() => {
+    const value = currentUser.value;
+    const profile = value?.profile || {};
+    return profile?.DisplayName || profile?.FullName || value?.nickname || value?.name || value?.username || '已登录用户';
+});
+
+const userDescription = computed(() => {
+    const value = currentUser.value;    
+    const profile = value?.profile || {};
+    return value?.email || profile?.title || profile?.phone || value?.phone || '个人信息';
+});
+
+const userAvatar = computed(() => {
+    const value = currentUser.value;
+    const profile = value?.profile || {};
+    return {
+        src: profile?.avatar_url || value?.avatar || value?.avatar_url || undefined,
+        icon: 'i-lucide-user',
+    };
+});
+
 </script>
 <template>
     <UApp :locale="zh_cn">
@@ -65,10 +89,7 @@ const dropdownItems = computed<DropdownMenuItem[]>(() => [
                     <UColorModeSelect />
 
                     <UDropdownMenu :items="dropdownItems">
-                        <UUser name="Jhon" description="Software Engineer" :avatar="{
-                            src: 'https://i.pravatar.cc/150?u=john-doe',
-                            icon: 'i-lucide-image'
-                        }" />
+                        <UUser :name="userName" :description="userDescription" :avatar="userAvatar" />
                     </UDropdownMenu>
                 </div>
             </template>

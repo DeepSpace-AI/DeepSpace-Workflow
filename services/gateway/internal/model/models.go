@@ -187,28 +187,16 @@ type Model struct {
 }
 
 type Plan struct {
-	ID           int64 `gorm:"primaryKey;autoIncrement"`
-	Name         string
-	Status       string    `gorm:"default:active;index"`
-	Currency     string    `gorm:"default:USD"`
-	BillingMode  string    `gorm:"index"`
-	PriceInput   float64   `gorm:"type:numeric(20,6)"`
-	PriceOutput  float64   `gorm:"type:numeric(20,6)"`
-	PriceRequest float64   `gorm:"type:numeric(20,6)"`
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
-}
-
-type PlanModelPrice struct {
-	ID           int64     `gorm:"primaryKey;autoIncrement"`
-	PlanID       int64     `gorm:"index:idx_plan_model_prices_plan_model,priority:1"`
-	ModelID      uuid.UUID `gorm:"type:uuid;index:idx_plan_model_prices_plan_model,priority:2"`
-	Currency     string    `gorm:"default:USD"`
-	PriceInput   float64   `gorm:"type:numeric(20,6)"`
-	PriceOutput  float64   `gorm:"type:numeric(20,6)"`
-	PriceRequest float64   `gorm:"type:numeric(20,6)"`
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
+	ID                int64 `gorm:"primaryKey;autoIncrement"`
+	Name              string
+	Status            string    `gorm:"default:active;index"`
+	IncludedTokens    int64     `gorm:"default:0"`
+	IncludedRequests  int64     `gorm:"default:0"`
+	ResetIntervalDays int       `gorm:"default:30"`
+	Price             float64   `gorm:"type:numeric(20,6)"`
+	Currency          string    `gorm:"default:CNY"`
+	CreatedAt         time.Time `gorm:"autoCreateTime"`
+	UpdatedAt         time.Time `gorm:"autoUpdateTime"`
 }
 
 type PlanSubscription struct {
@@ -220,4 +208,61 @@ type PlanSubscription struct {
 	EndAt     *time.Time `gorm:"index:idx_plan_subscriptions_user_start_end,priority:3"`
 	CreatedAt time.Time  `gorm:"autoCreateTime"`
 	UpdatedAt time.Time  `gorm:"autoUpdateTime"`
+}
+
+type PlanUsage struct {
+	ID             int64      `gorm:"primaryKey;autoIncrement"`
+	SubscriptionID int64      `gorm:"index:idx_plan_usages_subscription_period,priority:1"`
+	UserID         int64      `gorm:"index:idx_plan_usages_user_period,priority:1"`
+	PeriodStart    time.Time  `gorm:"index:idx_plan_usages_subscription_period,priority:2;index:idx_plan_usages_user_period,priority:2"`
+	PeriodEnd      *time.Time `gorm:"index:idx_plan_usages_subscription_period,priority:3;index:idx_plan_usages_user_period,priority:3"`
+	UsedTokens     int64      `gorm:"default:0"`
+	UsedRequests   int64      `gorm:"default:0"`
+	CreatedAt      time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt      time.Time  `gorm:"autoUpdateTime"`
+}
+
+type RiskPolicy struct {
+	ID        int64 `gorm:"primaryKey;autoIncrement"`
+	Name      string
+	Scope     string    `gorm:"index"`
+	UserID    *int64    `gorm:"index"`
+	ProjectID *int64    `gorm:"index"`
+	Status    string    `gorm:"default:active;index"`
+	Priority  int       `gorm:"default:0;index"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+}
+
+type RateLimit struct {
+	ID            int64     `gorm:"primaryKey;autoIncrement"`
+	PolicyID      int64     `gorm:"index"`
+	WindowSeconds int       `gorm:"index"`
+	MaxRequests   int       `gorm:"default:0"`
+	MaxTokens     int       `gorm:"default:0"`
+	Status        string    `gorm:"default:active;index"`
+	CreatedAt     time.Time `gorm:"autoCreateTime"`
+	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
+}
+
+type IPRule struct {
+	ID        int64  `gorm:"primaryKey;autoIncrement"`
+	PolicyID  int64  `gorm:"index"`
+	Type      string `gorm:"index"`
+	IP        *string
+	CIDR      *string
+	Status    string    `gorm:"default:active;index"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+}
+
+type BudgetCap struct {
+	ID        int64     `gorm:"primaryKey;autoIncrement"`
+	PolicyID  int64     `gorm:"index"`
+	Cycle     string    `gorm:"index"`
+	MaxCost   float64   `gorm:"type:numeric(20,6)"`
+	Currency  string    `gorm:"default:CNY"`
+	Status    string    `gorm:"default:active;index"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }

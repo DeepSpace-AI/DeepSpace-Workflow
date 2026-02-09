@@ -9,3 +9,9 @@
 8. Gateway端接口文档位于 /docs/gateway-openapi.yaml 中。
 9. 用户确认方案后直接实施修改并完成验证，不重复请求确认。
 10. 用户提供官方示例纠正时，优先按示例对齐实现并说明原因。
+11. 新增或调整样式时必须兼容暗色模式。
+12. Gateway 接口文档默认以 /services/gateway/cmd/gateway/docs/swagger.json 为准，除非用户明确指定其他文档路径。
+13. 对话模型下拉的 menuItems 不要改为 computed 响应式，保持 ref 同步，避免 Nuxt UI SelectMenu 渲染异常。
+14. 对话模型下拉的 menuItems 必须是纯数组值，禁止使用 ref/computed 或其他 Vue 包装。
+15. /api/users/me 的字段解析必须兼容 PascalCase（如 DisplayName/FullName/AvatarURL）与 snake_case 两种格式。
+15. 新增风控策略必须提供类型选择并创建对应子规则（IP 规则/速率限制/预算上限）。

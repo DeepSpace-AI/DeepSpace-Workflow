@@ -7,7 +7,7 @@
           <UBadge color="neutral" variant="soft">共 {{ totalCount }} 条</UBadge>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <UInput v-model="searchTerm" placeholder="搜索引用ID或用户ID" icon="i-heroicons-magnifying-glass" class="w-64" />
+          <UInput v-model="searchTerm" placeholder="搜索用户ID" icon="i-heroicons-magnifying-glass" class="w-64" />
           <USelect v-model="typeFilter" :items="typeOptions" class="w-28" />
           <USelect v-model="pageSize" :items="pageSizeOptions" class="w-24" />
         </div>
@@ -15,7 +15,7 @@
     </template>
 
     <div class="flex flex-col gap-4">
-      <UTable :data="pagedItems" :columns="columns" />
+      <UTable :data="transactionItems" :columns="columns" :loading="isLoading" />
       <div class="flex items-center justify-between">
         <div class="text-sm text-gray-500">共 {{ totalCount }} 条</div>
         <UPagination v-model:page="page" :total="totalCount" :items-per-page="pageSize" :sibling-count="1" show-edges />
@@ -31,54 +31,18 @@ import type { TableColumn } from '@nuxt/ui'
 type TransactionRow = {
   id: number
   user_id: number
-  type: 'hold' | 'capture' | 'release'
+  type: 'hold' | 'capture' | 'release' | 'topup'
   amount: number
   ref_id: string
   created_at: string
 }
 
-const rawItems = ref<TransactionRow[]>([
-  {
-    id: 90231,
-    user_id: 1001,
-    type: 'hold',
-    amount: 18.5,
-    ref_id: 'req_20250201_001',
-    created_at: '2025-02-01T10:22:10Z'
-  },
-  {
-    id: 90232,
-    user_id: 1001,
-    type: 'capture',
-    amount: 16.8,
-    ref_id: 'req_20250201_001',
-    created_at: '2025-02-01T10:22:30Z'
-  },
-  {
-    id: 90233,
-    user_id: 1003,
-    type: 'hold',
-    amount: 6.2,
-    ref_id: 'req_20250115_002',
-    created_at: '2025-01-15T09:31:10Z'
-  },
-  {
-    id: 90234,
-    user_id: 1003,
-    type: 'release',
-    amount: 1.1,
-    ref_id: 'req_20250115_002',
-    created_at: '2025-01-15T09:31:50Z'
-  },
-  {
-    id: 90235,
-    user_id: 1002,
-    type: 'capture',
-    amount: 12.6,
-    ref_id: 'req_20250120_009',
-    created_at: '2025-01-20T08:12:08Z'
-  }
-])
+type TransactionListResponse = {
+  items: TransactionRow[]
+  total: number
+  page: number
+  page_size: number
+}
 
 const page = ref(1)
 const pageSize = ref(10)
@@ -89,7 +53,8 @@ const typeOptions = [
   { label: '全部类型', value: 'all' },
   { label: '预扣', value: 'hold' },
   { label: '扣款', value: 'capture' },
-  { label: '释放', value: 'release' }
+  { label: '释放', value: 'release' },
+  { label: '充值', value: 'topup' }
 ]
 const pageSizeOptions = [
   { label: '10 / 页', value: 10 },
@@ -97,27 +62,64 @@ const pageSizeOptions = [
   { label: '50 / 页', value: 50 }
 ]
 
-const filteredItems = computed(() => {
-  const keyword = searchTerm.value.trim().toLowerCase()
-  return rawItems.value.filter((item) => {
-    const matchesKeyword =
-      !keyword ||
-      item.ref_id.toLowerCase().includes(keyword) ||
-      String(item.user_id).includes(keyword)
-    const matchesType = typeFilter.value === 'all' || item.type === typeFilter.value
-    return matchesKeyword && matchesType
-  })
-})
-
-const totalCount = computed(() => filteredItems.value.length)
-
-const pagedItems = computed(() => {
-  const start = (page.value - 1) * pageSize.value
-  return filteredItems.value.slice(start, start + pageSize.value)
-})
-
 watch([searchTerm, typeFilter, pageSize], () => {
   page.value = 1
+})
+
+const userIdQuery = computed(() => {
+  const keyword = searchTerm.value.trim()
+  if (!keyword) return undefined
+  const parsed = Number(keyword)
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined
+  return parsed
+})
+
+const queryParams = computed(() => ({
+  page: page.value,
+  page_size: pageSize.value,
+  user_id: userIdQuery.value,
+  type: typeFilter.value === 'all' ? undefined : typeFilter.value
+}))
+
+const { data: listData, pending: isLoading } = await useFetch<TransactionListResponse | { data?: TransactionListResponse }>(
+  '/api/admin/billing/transactions',
+  {
+  query: queryParams,
+  default: () => ({
+    items: [],
+    total: 0,
+    page: 1,
+    page_size: pageSize.value
+  })
+  }
+)
+
+const rawTransactionItems = computed(() => {
+  const dataValue = listData.value
+  if (!dataValue) return []
+  if ('data' in dataValue && Array.isArray(dataValue.data?.items)) return dataValue.data.items
+  if ('items' in dataValue && Array.isArray(dataValue.items)) return dataValue.items
+  return []
+})
+
+const normalizeTransactionRow = (item: Record<string, unknown>): TransactionRow => {
+  return {
+    id: Number(item.id ?? item.ID ?? 0),
+    user_id: Number(item.user_id ?? item.UserID ?? 0),
+    type: String(item.type ?? item.Type ?? 'release') as TransactionRow['type'],
+    amount: Number(item.amount ?? item.Amount ?? 0),
+    ref_id: String(item.ref_id ?? item.RefID ?? ''),
+    created_at: String(item.created_at ?? item.CreatedAt ?? '')
+  }
+}
+
+const transactionItems = computed(() => rawTransactionItems.value.map(normalizeTransactionRow))
+const totalCount = computed(() => {
+  const dataValue = listData.value
+  if (!dataValue) return 0
+  if ('total' in dataValue && typeof dataValue.total === 'number') return dataValue.total
+  if ('data' in dataValue && typeof dataValue.data?.total === 'number') return dataValue.data.total
+  return 0
 })
 
 const UBadge = resolveComponent('UBadge')
@@ -144,8 +146,22 @@ const columns = computed<TableColumn<TransactionRow>[]>(() => [
     header: '类型',
     cell: ({ row }) => {
       const typeValue = String(row.getValue('type') || '')
-      const color = typeValue === 'hold' ? 'warning' : typeValue === 'capture' ? 'success' : 'neutral'
-      const label = typeValue === 'hold' ? '预扣' : typeValue === 'capture' ? '扣款' : '释放'
+      const color = typeValue === 'hold'
+        ? 'warning'
+        : typeValue === 'capture'
+          ? 'success'
+          : typeValue === 'topup'
+            ? 'primary'
+            : 'neutral'
+      const label = typeValue === 'hold'
+        ? '预扣'
+        : typeValue === 'capture'
+          ? '扣款'
+          : typeValue === 'release'
+            ? '释放'
+            : typeValue === 'topup'
+              ? '充值'
+              : typeValue || '未知'
       return h(UBadge, { color, variant: 'subtle' }, () => label)
     }
   },
@@ -157,7 +173,7 @@ const columns = computed<TableColumn<TransactionRow>[]>(() => [
   },
   {
     accessorKey: 'ref_id',
-    header: '引用ID'
+    header: '幂等ID'
   },
   {
     accessorKey: 'created_at',

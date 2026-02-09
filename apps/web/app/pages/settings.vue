@@ -75,7 +75,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+useHead({
+  title: "账户安全与偏好 - Deepspace Workflow",
+})
 
 type UserMeResponse = {
   user: { id: number; email: string; status: string }

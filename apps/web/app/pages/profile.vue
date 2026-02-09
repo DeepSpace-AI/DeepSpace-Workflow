@@ -78,10 +78,40 @@
 
     </div>
   </UContainer>
+
+  <UModal v-model:open="forceModalOpen" :dismissible="false">
+    <template #content>
+      <div class="p-6 space-y-5">
+        <div class="space-y-1">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">请先完善个人信息</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            为保障系统功能可用，你需要先填写显示名和真实姓名，完成后才能进入系统。
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <UFormField label="显示名" required>
+            <UInput v-model="form.display_name" placeholder="用于系统内展示" class="w-full" />
+          </UFormField>
+          <UFormField label="真实姓名" required>
+            <UInput v-model="form.full_name" placeholder="身份证件姓名" class="w-full" />
+          </UFormField>
+        </div>
+
+        <div class="flex justify-end">
+          <UButton color="primary" :loading="saving" @click="saveProfile">
+            保存并继续
+          </UButton>
+        </div>
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+useHead({
+  title: "个人资料 - Deepspace Workflow",
+})
 
 type UserMeResponse = {
   user: { id: number; email: string; status: string }
@@ -92,6 +122,12 @@ type UserMeResponse = {
     avatar_url?: string | null
     bio?: string | null
     phone?: string | null
+    DisplayName?: string | null
+    FullName?: string | null
+    Title?: string | null
+    AvatarURL?: string | null
+    Bio?: string | null
+    Phone?: string | null
   }
   settings: {
     theme?: string | null
@@ -101,9 +137,25 @@ type UserMeResponse = {
 }
 
 const requestHeaders = useRequestHeaders(['cookie'])
+const route = useRoute()
 const { data, refresh } = await useAsyncData<UserMeResponse>('user-me', () =>
   $fetch('/api/users/me', { headers: requestHeaders })
 )
+
+const forceInit = computed(() => String(route.query.force_init || '') === '1')
+const profileIncomplete = computed(() => {
+  const profile = data.value?.profile
+  if (!profile) return false
+  const displayName = String(profile.display_name || profile.DisplayName || '').trim()
+  const fullName = String(profile.full_name || profile.FullName || '').trim()
+  return !(displayName && fullName)
+})
+const mustForceInit = computed(() => forceInit.value || profileIncomplete.value)
+const redirectPath = computed(() => {
+  const raw = String(route.query.redirect || '').trim()
+  return raw.startsWith('/') ? raw : '/projects'
+})
+const forceModalOpen = ref(false)
 
 const form = reactive({
   display_name: '',
@@ -118,28 +170,54 @@ watch(
   () => data.value,
   (value) => {
     if (!value?.profile) return
-    form.display_name = value.profile.display_name || ''
-    form.full_name = value.profile.full_name || ''
-    form.title = value.profile.title || ''
-    form.avatar_url = value.profile.avatar_url || ''
-    form.bio = value.profile.bio || ''
-    form.phone = value.profile.phone || ''
+    form.display_name = value.profile.display_name || value.profile.DisplayName || ''
+    form.full_name = value.profile.full_name || value.profile.FullName || ''
+    form.title = value.profile.title || value.profile.Title || ''
+    form.avatar_url = value.profile.avatar_url || value.profile.AvatarURL || ''
+    form.bio = value.profile.bio || value.profile.Bio || ''
+    form.phone = value.profile.phone || value.profile.Phone || ''
   },
   { immediate: true }
 )
 
+watch(
+  () => mustForceInit.value,
+  (value) => {
+    forceModalOpen.value = value
+  },
+  { immediate: true }
+)
+
+watch(forceModalOpen, (value) => {
+  if (mustForceInit.value && !value) {
+    forceModalOpen.value = true
+  }
+})
+
 const saving = ref(false)
 const toast = useToast()
 
+function isProfileInitialized() {
+  return Boolean(form.display_name.trim() && form.full_name.trim())
+}
+
 const saveProfile = async () => {
+  const shouldRedirectAfterSave = mustForceInit.value
+
+  if (!isProfileInitialized()) {
+    toast.add({ title: '请先填写显示名和真实姓名', color: 'warning' })
+    forceModalOpen.value = forceInit.value
+    return
+  }
+
   saving.value = true
   try {
     await $fetch('/api/users/me', {
       method: 'PATCH',
       body: {
         profile: {
-          display_name: form.display_name,
-          full_name: form.full_name,
+          display_name: form.display_name.trim(),
+          full_name: form.full_name.trim(),
           title: form.title,
           avatar_url: form.avatar_url,
           bio: form.bio,
@@ -149,6 +227,10 @@ const saveProfile = async () => {
     })
     toast.add({ title: '保存成功', color: 'green' })
     await refresh()
+    if (shouldRedirectAfterSave) {
+      forceModalOpen.value = false
+      await navigateTo(redirectPath.value)
+    }
   } catch (err: any) {
     toast.add({ title: '保存失败', description: err?.data?.message || err?.message, color: 'red' })
   } finally {

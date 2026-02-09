@@ -1,4 +1,7 @@
 <script setup lang="ts">
+useHead({
+  title: "钱包概览 - Deepspace Workflow",
+})
 const requestHeaders = useRequestHeaders(['cookie'])
 
 type WalletRecord = {

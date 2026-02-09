@@ -44,4 +44,9 @@ export default defineNuxtConfig({
       ],
     },
   },
+  app: {
+    head: {
+      title: "DeepSpaceWorkflow",
+    },
+  },
 });

@@ -36,8 +36,12 @@ func AutoMigrate(db *gorm.DB, cfg *config.Config) error {
 		&model.KnowledgeDocument{},
 		&model.Model{},
 		&model.Plan{},
-		&model.PlanModelPrice{},
 		&model.PlanSubscription{},
+		&model.PlanUsage{},
+		&model.RiskPolicy{},
+		&model.RateLimit{},
+		&model.IPRule{},
+		&model.BudgetCap{},
 	)
 }
 
@@ -60,7 +64,11 @@ func dropAll(db *gorm.DB) error {
 		&model.KnowledgeDocument{},
 		&model.Model{},
 		&model.PlanSubscription{},
-		&model.PlanModelPrice{},
+		&model.PlanUsage{},
 		&model.Plan{},
+		&model.RiskPolicy{},
+		&model.RateLimit{},
+		&model.IPRule{},
+		&model.BudgetCap{},
 	)
 }

@@ -3,6 +3,7 @@ package plan
 import (
 	"context"
 	"errors"
+	"math"
 	"strings"
 	"time"
 
@@ -10,14 +11,10 @@ import (
 	"deepspace/internal/repo"
 )
 
-const (
-	BillingModeToken   = "token"
-	BillingModeRequest = "request"
-)
-
 var (
 	ErrInvalidPlanName          = errors.New("invalid plan name")
-	ErrInvalidBillingMode       = errors.New("invalid billing mode")
+	ErrInvalidPlanQuota         = errors.New("invalid plan quota")
+	ErrInvalidPlanCycle         = errors.New("invalid plan cycle")
 	ErrInvalidPlanPrice         = errors.New("invalid plan price")
 	ErrInvalidPlanCurrency      = errors.New("invalid plan currency")
 	ErrPlanNotFound             = errors.New("plan not found")
@@ -27,36 +24,36 @@ var (
 
 type Service struct {
 	planRepo         *repo.PlanRepo
-	priceRepo        *repo.PlanModelPriceRepo
 	subscriptionRepo *repo.PlanSubscriptionRepo
+	usageRepo        *repo.PlanUsageRepo
 }
 
-func New(planRepo *repo.PlanRepo, priceRepo *repo.PlanModelPriceRepo, subscriptionRepo *repo.PlanSubscriptionRepo) *Service {
+func New(planRepo *repo.PlanRepo, subscriptionRepo *repo.PlanSubscriptionRepo, usageRepo *repo.PlanUsageRepo) *Service {
 	return &Service{
 		planRepo:         planRepo,
-		priceRepo:        priceRepo,
 		subscriptionRepo: subscriptionRepo,
+		usageRepo:        usageRepo,
 	}
 }
 
 type PlanCreateInput struct {
-	Name         string
-	Status       string
-	Currency     string
-	BillingMode  string
-	PriceInput   float64
-	PriceOutput  float64
-	PriceRequest float64
+	Name              string
+	Status            string
+	IncludedTokens    int64
+	IncludedRequests  int64
+	ResetIntervalDays int
+	Price             float64
+	Currency          string
 }
 
 type PlanUpdateInput struct {
-	Name         *string
-	Status       *string
-	Currency     *string
-	BillingMode  *string
-	PriceInput   *float64
-	PriceOutput  *float64
-	PriceRequest *float64
+	Name              *string
+	Status            *string
+	IncludedTokens    *int64
+	IncludedRequests  *int64
+	ResetIntervalDays *int
+	Price             *float64
+	Currency          *string
 }
 
 type SubscriptionCreateInput struct {
@@ -73,13 +70,15 @@ type SubscriptionUpdateInput struct {
 	EndAt   *time.Time
 }
 
-type ActivePlanPrice struct {
-	PlanID       int64
-	BillingMode  string
-	Currency     string
-	PriceInput   float64
-	PriceOutput  float64
-	PriceRequest float64
+type ActivePlanQuota struct {
+	PlanID         int64
+	SubscriptionID int64
+	Type           string
+	Included       int64
+	Used           int64
+	Remaining      int64
+	PeriodStart    time.Time
+	PeriodEnd      *time.Time
 }
 
 func (s *Service) CreatePlan(ctx context.Context, input PlanCreateInput) (*model.Plan, error) {
@@ -87,16 +86,19 @@ func (s *Service) CreatePlan(ctx context.Context, input PlanCreateInput) (*model
 	if name == "" {
 		return nil, ErrInvalidPlanName
 	}
-	billingMode := normalizeBillingMode(input.BillingMode)
-	if billingMode == "" {
-		return nil, ErrInvalidBillingMode
+	if !isValidQuota(input.IncludedTokens, input.IncludedRequests) {
+		return nil, ErrInvalidPlanQuota
+	}
+	resetInterval := normalizeResetInterval(input.ResetIntervalDays)
+	if resetInterval == 0 {
+		return nil, ErrInvalidPlanCycle
+	}
+	if input.Price < 0 {
+		return nil, ErrInvalidPlanPrice
 	}
 	currency := normalizeCurrency(input.Currency)
 	if currency == "" {
 		return nil, ErrInvalidPlanCurrency
-	}
-	if input.PriceInput < 0 || input.PriceOutput < 0 || input.PriceRequest < 0 {
-		return nil, ErrInvalidPlanPrice
 	}
 	status := normalizeStatus(input.Status)
 	if status == "" {
@@ -104,13 +106,13 @@ func (s *Service) CreatePlan(ctx context.Context, input PlanCreateInput) (*model
 	}
 
 	plan := &model.Plan{
-		Name:         name,
-		Status:       status,
-		Currency:     currency,
-		BillingMode:  billingMode,
-		PriceInput:   input.PriceInput,
-		PriceOutput:  input.PriceOutput,
-		PriceRequest: input.PriceRequest,
+		Name:              name,
+		Status:            status,
+		IncludedTokens:    input.IncludedTokens,
+		IncludedRequests:  input.IncludedRequests,
+		ResetIntervalDays: resetInterval,
+		Price:             input.Price,
+		Currency:          currency,
 	}
 	if err := s.planRepo.Create(ctx, plan); err != nil {
 		return nil, err
@@ -120,6 +122,13 @@ func (s *Service) CreatePlan(ctx context.Context, input PlanCreateInput) (*model
 
 func (s *Service) UpdatePlan(ctx context.Context, id int64, input PlanUpdateInput) (*model.Plan, error) {
 	if id <= 0 {
+		return nil, ErrPlanNotFound
+	}
+	plan, err := s.planRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if plan == nil {
 		return nil, ErrPlanNotFound
 	}
 	updates := map[string]any{}
@@ -137,6 +146,37 @@ func (s *Service) UpdatePlan(ctx context.Context, id int64, input PlanUpdateInpu
 		}
 		updates["status"] = status
 	}
+	if input.IncludedTokens != nil {
+		updates["included_tokens"] = *input.IncludedTokens
+	}
+	if input.IncludedRequests != nil {
+		updates["included_requests"] = *input.IncludedRequests
+	}
+	if input.IncludedTokens != nil || input.IncludedRequests != nil {
+		finalTokens := plan.IncludedTokens
+		finalRequests := plan.IncludedRequests
+		if input.IncludedTokens != nil {
+			finalTokens = *input.IncludedTokens
+		}
+		if input.IncludedRequests != nil {
+			finalRequests = *input.IncludedRequests
+		}
+		if !isValidQuota(finalTokens, finalRequests) {
+			return nil, ErrInvalidPlanQuota
+		}
+	}
+	if input.ResetIntervalDays != nil {
+		if normalizeResetInterval(*input.ResetIntervalDays) == 0 {
+			return nil, ErrInvalidPlanCycle
+		}
+		updates["reset_interval_days"] = *input.ResetIntervalDays
+	}
+	if input.Price != nil {
+		if *input.Price < 0 {
+			return nil, ErrInvalidPlanPrice
+		}
+		updates["price"] = *input.Price
+	}
 	if input.Currency != nil {
 		currency := normalizeCurrency(*input.Currency)
 		if currency == "" {
@@ -144,36 +184,25 @@ func (s *Service) UpdatePlan(ctx context.Context, id int64, input PlanUpdateInpu
 		}
 		updates["currency"] = currency
 	}
-	if input.BillingMode != nil {
-		billingMode := normalizeBillingMode(*input.BillingMode)
-		if billingMode == "" {
-			return nil, ErrInvalidBillingMode
-		}
-		updates["billing_mode"] = billingMode
-	}
-	if input.PriceInput != nil {
-		if *input.PriceInput < 0 {
-			return nil, ErrInvalidPlanPrice
-		}
-		updates["price_input"] = *input.PriceInput
-	}
-	if input.PriceOutput != nil {
-		if *input.PriceOutput < 0 {
-			return nil, ErrInvalidPlanPrice
-		}
-		updates["price_output"] = *input.PriceOutput
-	}
-	if input.PriceRequest != nil {
-		if *input.PriceRequest < 0 {
-			return nil, ErrInvalidPlanPrice
-		}
-		updates["price_request"] = *input.PriceRequest
-	}
 	return s.planRepo.Update(ctx, id, updates)
 }
 
 func (s *Service) ListPlans(ctx context.Context) ([]model.Plan, error) {
 	return s.planRepo.List(ctx)
+}
+
+func (s *Service) ListActivePlans(ctx context.Context) ([]model.Plan, error) {
+	items, err := s.planRepo.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]model.Plan, 0, len(items))
+	for _, item := range items {
+		if strings.ToLower(strings.TrimSpace(item.Status)) == "active" {
+			result = append(result, item)
+		}
+	}
+	return result, nil
 }
 
 func (s *Service) CreateSubscription(ctx context.Context, input SubscriptionCreateInput) (*model.PlanSubscription, error) {
@@ -235,7 +264,7 @@ func (s *Service) GetActiveSubscription(ctx context.Context, userID int64, now t
 	return s.subscriptionRepo.GetActiveByOrg(ctx, userID, now)
 }
 
-func (s *Service) GetActivePlanPrice(ctx context.Context, userID int64, modelID string, now time.Time) (*ActivePlanPrice, bool, error) {
+func (s *Service) GetActivePlanQuota(ctx context.Context, userID int64, now time.Time) (*ActivePlanQuota, bool, error) {
 	subscription, err := s.subscriptionRepo.GetActiveByOrg(ctx, userID, now)
 	if err != nil {
 		return nil, false, err
@@ -250,29 +279,93 @@ func (s *Service) GetActivePlanPrice(ctx context.Context, userID int64, modelID 
 	if plan == nil {
 		return nil, false, ErrPlanNotFound
 	}
-	result := &ActivePlanPrice{
-		PlanID:       plan.ID,
-		BillingMode:  plan.BillingMode,
-		Currency:     plan.Currency,
-		PriceInput:   plan.PriceInput,
-		PriceOutput:  plan.PriceOutput,
-		PriceRequest: plan.PriceRequest,
+	quotaType, included := resolveQuota(plan)
+	if quotaType == "" || included <= 0 {
+		return nil, false, nil
 	}
-	if modelID == "" {
-		return result, true, nil
-	}
-	override, err := s.priceRepo.GetByPlanModel(ctx, plan.ID, modelID)
+	periodStart, periodEnd := resolveUsagePeriod(subscription.StartAt, subscription.EndAt, plan.ResetIntervalDays, now)
+	usageItem, err := s.usageRepo.GetBySubscriptionPeriod(ctx, subscription.ID, periodStart, periodEnd)
 	if err != nil {
 		return nil, false, err
 	}
-	if override == nil {
-		return result, true, nil
+	var used int64
+	if usageItem != nil {
+		if quotaType == "token" {
+			used = usageItem.UsedTokens
+		} else {
+			used = usageItem.UsedRequests
+		}
 	}
-	result.Currency = override.Currency
-	result.PriceInput = override.PriceInput
-	result.PriceOutput = override.PriceOutput
-	result.PriceRequest = override.PriceRequest
-	return result, true, nil
+	remaining := included - used
+	if remaining < 0 {
+		remaining = 0
+	}
+	return &ActivePlanQuota{
+		PlanID:         plan.ID,
+		SubscriptionID: subscription.ID,
+		Type:           quotaType,
+		Included:       included,
+		Used:           used,
+		Remaining:      remaining,
+		PeriodStart:    periodStart,
+		PeriodEnd:      periodEnd,
+	}, true, nil
+}
+
+type QuotaApplyResult struct {
+	Applied     bool
+	Type        string
+	Included    int64
+	UsedBefore  int64
+	UsedAfter   int64
+	Overage     int64
+	Remaining   int64
+	PeriodStart time.Time
+	PeriodEnd   *time.Time
+}
+
+func (s *Service) ApplyQuota(ctx context.Context, userID int64, now time.Time, tokenUnits int64, requestUnits int64) (*QuotaApplyResult, error) {
+	quota, ok, err := s.GetActivePlanQuota(ctx, userID, now)
+	if err != nil || !ok || quota == nil {
+		return &QuotaApplyResult{Applied: false}, err
+	}
+	var units int64
+	if quota.Type == "token" {
+		units = tokenUnits
+	} else {
+		units = requestUnits
+	}
+	if units < 0 {
+		units = 0
+	}
+	usedBefore := quota.Used
+	remainingBefore := quota.Remaining
+	overage := int64(0)
+	if units > remainingBefore {
+		overage = units - remainingBefore
+	}
+	usedAfter := usedBefore + units
+	remainingAfter := quota.Included - usedAfter
+	if remainingAfter < 0 {
+		remainingAfter = 0
+	}
+	if units > 0 {
+		_, err = s.usageRepo.AddUsage(ctx, quota.SubscriptionID, userID, quota.PeriodStart, quota.PeriodEnd, applyTokenDelta(quota.Type, units), applyRequestDelta(quota.Type, units))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &QuotaApplyResult{
+		Applied:     true,
+		Type:        quota.Type,
+		Included:    quota.Included,
+		UsedBefore:  usedBefore,
+		UsedAfter:   usedAfter,
+		Overage:     overage,
+		Remaining:   remainingAfter,
+		PeriodStart: quota.PeriodStart,
+		PeriodEnd:   quota.PeriodEnd,
+	}, nil
 }
 
 func normalizeStatus(value string) string {
@@ -288,20 +381,90 @@ func normalizeStatus(value string) string {
 	}
 }
 
+func normalizeResetInterval(value int) int {
+	if value == 0 {
+		return 30
+	}
+	if value < 1 || value > 365 {
+		return 0
+	}
+	return value
+}
+
 func normalizeCurrency(value string) string {
 	value = strings.TrimSpace(value)
 	if value == "" {
-		return "USD"
+		return "CNY"
 	}
 	return strings.ToUpper(value)
 }
 
-func normalizeBillingMode(value string) string {
-	value = strings.ToLower(strings.TrimSpace(value))
-	switch value {
-	case BillingModeToken, BillingModeRequest:
-		return value
-	default:
-		return ""
+func isValidQuota(tokens, requests int64) bool {
+	if tokens > 0 && requests > 0 {
+		return false
 	}
+	if tokens <= 0 && requests <= 0 {
+		return false
+	}
+	return true
+}
+
+func resolveQuota(plan *model.Plan) (string, int64) {
+	if plan == nil {
+		return "", 0
+	}
+	if plan.IncludedTokens > 0 && plan.IncludedRequests == 0 {
+		return "token", plan.IncludedTokens
+	}
+	if plan.IncludedRequests > 0 && plan.IncludedTokens == 0 {
+		return "request", plan.IncludedRequests
+	}
+	return "", 0
+}
+
+func resolveUsagePeriod(start time.Time, end *time.Time, intervalDays int, now time.Time) (time.Time, *time.Time) {
+	intervalDays = normalizeResetInterval(intervalDays)
+	if intervalDays == 0 {
+		intervalDays = 30
+	}
+	startUTC := start.UTC()
+	nowUTC := now.UTC()
+	if nowUTC.Before(startUTC) {
+		periodStart := startUTC
+		periodEnd := startUTC.AddDate(0, 0, intervalDays)
+		periodEnd = clampPeriodEnd(periodEnd, end)
+		return periodStart, &periodEnd
+	}
+
+	elapsedDays := int(math.Floor(nowUTC.Sub(startUTC).Hours() / 24))
+	periodIndex := elapsedDays / intervalDays
+	periodStart := startUTC.AddDate(0, 0, periodIndex*intervalDays)
+	periodEnd := periodStart.AddDate(0, 0, intervalDays)
+	periodEnd = clampPeriodEnd(periodEnd, end)
+	return periodStart, &periodEnd
+}
+
+func clampPeriodEnd(periodEnd time.Time, end *time.Time) time.Time {
+	if end == nil {
+		return periodEnd
+	}
+	endUTC := end.UTC()
+	if periodEnd.After(endUTC) {
+		return endUTC
+	}
+	return periodEnd
+}
+
+func applyTokenDelta(quotaType string, units int64) int64 {
+	if quotaType == "token" {
+		return units
+	}
+	return 0
+}
+
+func applyRequestDelta(quotaType string, units int64) int64 {
+	if quotaType == "request" {
+		return units
+	}
+	return 0
 }

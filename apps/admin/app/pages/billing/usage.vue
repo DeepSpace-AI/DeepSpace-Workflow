@@ -7,14 +7,14 @@
           <UBadge color="neutral" variant="soft">共 {{ totalCount }} 条</UBadge>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <UInput v-model="searchTerm" placeholder="搜索模型或 trace_id" icon="i-heroicons-magnifying-glass" class="w-64" />
+          <UInput v-model="searchTerm" placeholder="搜索用户ID" icon="i-heroicons-magnifying-glass" class="w-64" />
           <USelect v-model="pageSize" :items="pageSizeOptions" class="w-24" />
         </div>
       </div>
     </template>
 
     <div class="flex flex-col gap-4">
-      <UTable :data="pagedItems" :columns="columns" />
+      <UTable :data="usageItems" :columns="columns" :loading="isLoading" />
       <div class="flex items-center justify-between">
         <div class="text-sm text-gray-500">共 {{ totalCount }} 条</div>
         <UPagination v-model:page="page" :total="totalCount" :items-per-page="pageSize" :sibling-count="1" show-edges />
@@ -28,6 +28,7 @@ import { computed, ref, resolveComponent, watch } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 
 type UsageRow = {
+  user_id: number
   model: string
   total_tokens: number
   cost: number
@@ -35,36 +36,12 @@ type UsageRow = {
   created_at: string
 }
 
-const rawItems = ref<UsageRow[]>([
-  {
-    model: 'gpt-4.1',
-    total_tokens: 15800,
-    cost: 3.82,
-    trace_id: 'trace_20250201_001',
-    created_at: '2025-02-01T10:22:30Z'
-  },
-  {
-    model: 'gpt-4o-mini',
-    total_tokens: 6200,
-    cost: 0.94,
-    trace_id: 'trace_20250120_009',
-    created_at: '2025-01-20T08:12:08Z'
-  },
-  {
-    model: 'deepseek-r1',
-    total_tokens: 4200,
-    cost: 0.51,
-    trace_id: 'trace_20250115_002',
-    created_at: '2025-01-15T09:31:50Z'
-  },
-  {
-    model: 'qwen2.5-72b',
-    total_tokens: 9600,
-    cost: 2.12,
-    trace_id: 'trace_20250105_777',
-    created_at: '2025-01-05T17:05:00Z'
-  }
-])
+type UsageListResponse = {
+  items: UsageRow[]
+  total: number
+  page: number
+  page_size: number
+}
 
 const page = ref(1)
 const pageSize = ref(10)
@@ -76,24 +53,36 @@ const pageSizeOptions = [
   { label: '50 / 页', value: 50 }
 ]
 
-const filteredItems = computed(() => {
-  const keyword = searchTerm.value.trim().toLowerCase()
-  return rawItems.value.filter((item) => {
-    const matchesKeyword = !keyword || item.model.toLowerCase().includes(keyword) || item.trace_id.toLowerCase().includes(keyword)
-    return matchesKeyword
-  })
-})
-
-const totalCount = computed(() => filteredItems.value.length)
-
-const pagedItems = computed(() => {
-  const start = (page.value - 1) * pageSize.value
-  return filteredItems.value.slice(start, start + pageSize.value)
-})
-
 watch([searchTerm, pageSize], () => {
   page.value = 1
 })
+
+const userIdQuery = computed(() => {
+  const keyword = searchTerm.value.trim()
+  if (!keyword) return undefined
+  const parsed = Number(keyword)
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined
+  return parsed
+})
+
+const queryParams = computed(() => ({
+  page: page.value,
+  page_size: pageSize.value,
+  user_id: userIdQuery.value
+}))
+
+const { data: listData, pending: isLoading } = await useFetch<UsageListResponse>('/api/admin/billing/usage', {
+  query: queryParams,
+  default: () => ({
+    items: [],
+    total: 0,
+    page: 1,
+    page_size: pageSize.value
+  })
+})
+
+const usageItems = computed(() => listData.value?.items ?? [])
+const totalCount = computed(() => listData.value?.total ?? 0)
 
 const UBadge = resolveComponent('UBadge')
 
@@ -105,6 +94,11 @@ const formatTime = (value: string) => {
 }
 
 const columns = computed<TableColumn<UsageRow>[]>(() => [
+  {
+    accessorKey: 'user_id',
+    header: '用户ID',
+    meta: { class: { th: 'w-28' } }
+  },
   {
     accessorKey: 'model',
     header: '模型'

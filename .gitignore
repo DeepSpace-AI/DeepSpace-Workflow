@@ -50,6 +50,7 @@ node_modules/
 dist/
 .cache/
 build/
+.pnpm-store/
 
 # Docker
 docker-compose.override.yml

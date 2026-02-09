@@ -122,7 +122,7 @@ function handleSelectSearch(item: SearchResult) {
 </script>
 
 <template>
-  <div class="p-3 w-80 border-r border-neutral-200 dark:border-neutral-800">
+  <div class="p-3 w-80 bg-white/70 dark:bg-neutral-900/70 border-r border-neutral-200 dark:border-neutral-800 flex flex-col gap-4">
     <div class="flex w-full gap-4 items-center">
       <UAvatar src="https://avatars.githubusercontent.com/u/259289102?s=48&v=4" size="lg">Lan</UAvatar>
       <div>
@@ -133,7 +133,7 @@ function handleSelectSearch(item: SearchResult) {
 
     <div class="mt-4 space-y-1">
       <UButton variant="ghost" color="neutral" icon="i-material-symbols:chat-add-on-outline" class="w-full"
-        :disabled="props.loading" @click="emit('create')">
+        :disabled="props.loading" :to="'/chat'">
         新建聊天
       </UButton>
       <UButton variant="ghost" color="neutral" icon="i-lucide-search" class="w-full" :disabled="props.loading"

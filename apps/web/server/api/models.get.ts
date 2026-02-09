@@ -8,21 +8,33 @@ export default defineEventHandler(async (event) => {
 
   const base = getGatewayBase(aiGateway.url);
   try {
-    return await $fetch(`${base}/v1/models`, {
+    const response = await $fetch<any>(`${base}/api/models`, {
       headers: {
         cookie: event.node.req.headers.cookie || "",
       },
     });
+    const items = Array.isArray(response?.items)
+      ? response.items
+      : Array.isArray(response?.data)
+        ? response.data
+        : [];
+    return {
+      ...response,
+      items,
+      data: items,
+    };
   } catch (error: any) {
     const status =
       error?.statusCode || error?.status || error?.response?.status;
     if (status === 402) {
+      const fallbackItems = [
+        { id: "deepseek-chat", name: "deepseek-chat", object: "model", owned_by: "fallback" },
+        { id: "gpt-4.1", name: "gpt-4.1", object: "model", owned_by: "fallback" },
+        { id: "claude-3.5", name: "claude-3.5", object: "model", owned_by: "fallback" },
+      ];
       return {
-        data: [
-          { id: "deepseek-chat", object: "model", owned_by: "fallback" },
-          { id: "gpt-4.1", object: "model", owned_by: "fallback" },
-          { id: "claude-3.5", object: "model", owned_by: "fallback" },
-        ],
+        items: fallbackItems,
+        data: fallbackItems,
       };
     }
     throw error;

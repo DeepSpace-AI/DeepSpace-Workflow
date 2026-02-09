@@ -15,11 +15,13 @@ import (
 	"deepspace/internal/service/email"
 	"deepspace/internal/service/knowledge"
 	modelservice "deepspace/internal/service/model"
+	"deepspace/internal/service/passwordreset"
 	planservice "deepspace/internal/service/plan"
 	"deepspace/internal/service/project"
 	"deepspace/internal/service/projectdocument"
 	"deepspace/internal/service/projectskill"
 	"deepspace/internal/service/projectworkflow"
+	"deepspace/internal/service/risk"
 	"deepspace/internal/service/usage"
 	"deepspace/internal/service/user"
 	"strings"
@@ -84,12 +86,21 @@ func main() {
 	modelRepo := repo.NewModelRepo(dbConn)
 	modelService := modelservice.New(modelRepo)
 	planRepo := repo.NewPlanRepo(dbConn)
-	planModelPriceRepo := repo.NewPlanModelPriceRepo(dbConn)
 	planSubscriptionRepo := repo.NewPlanSubscriptionRepo(dbConn)
-	planService := planservice.New(planRepo, planModelPriceRepo, planSubscriptionRepo)
+	planUsageRepo := repo.NewPlanUsageRepo(dbConn)
+	planService := planservice.New(planRepo, planSubscriptionRepo, planUsageRepo)
+	riskPolicyRepo := repo.NewRiskPolicyRepo(dbConn)
+	riskRateRepo := repo.NewRateLimitRepo(dbConn)
+	riskIPRepo := repo.NewIPRuleRepo(dbConn)
+	riskBudgetRepo := repo.NewBudgetCapRepo(dbConn)
+	riskService := risk.New(riskPolicyRepo, riskRateRepo, riskIPRepo, riskBudgetRepo)
 	emailService, err := email.New(cfg)
 	if err != nil {
 		log.Fatalf("Failed to init email service: %v", err)
+	}
+	passwordResetService, err := passwordreset.New(cfg, userRepo, userProfileRepo, emailService)
+	if err != nil {
+		log.Fatalf("Failed to init password reset service: %v", err)
 	}
 
 	r := gin.New()
@@ -103,6 +114,7 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api"
 
 	r.Use(middleware.TraceID())
+	r.Use(middleware.ProjectContext())
 	r.Use(middleware.ErrorHandler())
 	r.Use(func(c *gin.Context) {
 		// Backward-compat: if client mistakenly calls /v1/api/*, strip /v1.
@@ -116,7 +128,7 @@ func main() {
 	r.Use(cors.Default())
 
 	// Setup Routes
-	api.SetupRoutes(r, cfg, billingService, usageService, projectService, chatService, emailService, knowledgeService, modelService, planService, projectDocumentService, projectSkillService, projectWorkflowService, userAuthService, userService, jwtManager)
+	api.SetupRoutes(r, cfg, billingService, usageService, projectService, chatService, emailService, knowledgeService, modelService, planService, projectDocumentService, projectSkillService, projectWorkflowService, userAuthService, passwordResetService, userService, riskService, jwtManager)
 
 	log.Printf("Gateway running on port %s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {

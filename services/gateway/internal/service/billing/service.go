@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"strings"
+	"time"
 
 	"deepspace/internal/model"
 	"deepspace/internal/repo"
@@ -36,6 +39,23 @@ type HoldResult struct {
 type CaptureResult = HoldResult
 
 type ReleaseResult = HoldResult
+
+type TopUpResult = HoldResult
+
+type WalletListInput struct {
+	UserID   *int64
+	Page     int
+	PageSize int
+}
+
+type TransactionListInput struct {
+	UserID   *int64
+	Type     string
+	Start    *time.Time
+	End      *time.Time
+	Page     int
+	PageSize int
+}
 
 func (s *Service) GetWallet(ctx context.Context, userID int64) (*model.Wallet, error) {
 	wallet, err := s.repo.GetWallet(ctx, userID)
@@ -133,6 +153,49 @@ func (s *Service) Capture(ctx context.Context, userID int64, amount float64, ref
 	})
 }
 
+func (s *Service) TopUp(ctx context.Context, userID int64, amount float64, currency string, refID string, metadata map[string]any) (*TopUpResult, error) {
+	if amount == 0 || math.IsNaN(amount) || math.IsInf(amount, 0) {
+		return nil, ErrInvalidAmount
+	}
+	return s.withTx(ctx, func(repoTx *repo.BillingRepo) (*HoldResult, error) {
+		if existing, err := s.findExisting(ctx, repoTx, userID, refID, "topup", amount); err != nil {
+			return nil, err
+		} else if existing != nil {
+			wallet, err := s.ensureWallet(ctx, repoTx, userID)
+			if err != nil {
+				return nil, err
+			}
+			return &HoldResult{Wallet: wallet, Transaction: existing}, nil
+		}
+
+		wallet, err := s.ensureWallet(ctx, repoTx, userID)
+		if err != nil {
+			return nil, err
+		}
+
+		wallet.Balance += amount
+		if err := repoTx.UpdateWallet(ctx, userID, wallet.Balance, wallet.FrozenBalance); err != nil {
+			return nil, err
+		}
+
+		if metadata == nil {
+			metadata = map[string]any{}
+		}
+		metadata["currency"] = normalizeCurrency(currency)
+
+		meta, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, err
+		}
+		tr, err := repoTx.CreateTransaction(ctx, userID, "topup", amount, refID, meta)
+		if err != nil {
+			return nil, err
+		}
+
+		return &HoldResult{Wallet: wallet, Transaction: tr}, nil
+	})
+}
+
 func (s *Service) Release(ctx context.Context, userID int64, amount float64, refID string, metadata map[string]any) (*ReleaseResult, error) {
 	if amount <= 0 {
 		return nil, ErrInvalidAmount
@@ -173,6 +236,27 @@ func (s *Service) Release(ctx context.Context, userID int64, amount float64, ref
 		}
 
 		return &HoldResult{Wallet: wallet, Transaction: tr}, nil
+	})
+}
+
+func (s *Service) ListWallets(ctx context.Context, input WalletListInput) ([]repo.WalletWithUser, int64, error) {
+	page, pageSize := normalizePage(input.Page, input.PageSize)
+	return s.repo.ListWallets(ctx, repo.WalletListFilter{
+		UserID: input.UserID,
+		Limit:  pageSize,
+		Offset: (page - 1) * pageSize,
+	})
+}
+
+func (s *Service) ListTransactions(ctx context.Context, input TransactionListInput) ([]model.Transaction, int64, error) {
+	page, pageSize := normalizePage(input.Page, input.PageSize)
+	return s.repo.ListTransactions(ctx, repo.TransactionListFilter{
+		UserID: input.UserID,
+		Type:   input.Type,
+		Start:  input.Start,
+		End:    input.End,
+		Limit:  pageSize,
+		Offset: (page - 1) * pageSize,
 	})
 }
 
@@ -228,4 +312,25 @@ func (s *Service) findExisting(ctx context.Context, repoTx *repo.BillingRepo, us
 		return existing, nil
 	}
 	return nil, ErrRefConflict
+}
+
+func normalizeCurrency(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "CNY"
+	}
+	return strings.ToUpper(value)
+}
+
+func normalizePage(page, pageSize int) (int, int) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	return page, pageSize
 }

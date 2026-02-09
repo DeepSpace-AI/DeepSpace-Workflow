@@ -59,7 +59,17 @@ func (r *UserRepo) List(ctx context.Context, page, pageSize int, search, role, s
 	query := r.db.WithContext(ctx).Model(&model.User{})
 
 	if search != "" {
-		query = query.Where("email LIKE ? OR id IN (SELECT user_id FROM user_profiles WHERE display_name LIKE ? OR full_name LIKE ?)", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+		keyword := "%" + search + "%"
+		query = query.Where(
+			"email LIKE ? OR role LIKE ? OR status LIKE ? OR CAST(id AS TEXT) LIKE ? OR id IN (SELECT user_id FROM user_profiles WHERE display_name LIKE ? OR full_name LIKE ? OR phone LIKE ?)",
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+		)
 	}
 	if role != "" {
 		query = query.Where("role = ?", role)
