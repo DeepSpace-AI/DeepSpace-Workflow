@@ -11,13 +11,18 @@ RUN pnpm install --frozen-lockfile
 
 COPY apps/admin ./apps/admin
 
-RUN pnpm -C apps/admin generate
+RUN pnpm -C apps/admin build
 
-FROM nginx:1.27-alpine
+FROM node:20-alpine
 
-COPY apps/admin/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /workspace/apps/admin/.output/public /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /workspace/apps/admin/.output /app/.output
+
+EXPOSE 3000
+
+CMD ["node", "/app/.output/server/index.mjs"]

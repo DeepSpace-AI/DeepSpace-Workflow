@@ -11,13 +11,18 @@ RUN pnpm install --frozen-lockfile
 
 COPY apps/web ./apps/web
 
-RUN pnpm -C apps/web generate
+RUN pnpm -C apps/web build
 
-FROM nginx:1.27-alpine
+FROM node:20-alpine
 
-COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /workspace/apps/web/.output/public /usr/share/nginx/html
+WORKDIR /app
 
-EXPOSE 80
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
 
-CMD ["nginx", "-g", "daemon off;"]
+COPY --from=builder /workspace/apps/web/.output /app/.output
+
+EXPOSE 3000
+
+CMD ["node", "/app/.output/server/index.mjs"]
