@@ -28,6 +28,7 @@ pnpm-debug.log*
 # Environment Variables
 .env
 .env.local
+.env.docker
 .env.*.local
 !.env.example
 .env.docker
