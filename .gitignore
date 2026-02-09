@@ -30,6 +30,7 @@ pnpm-debug.log*
 .env.local
 .env.*.local
 !.env.example
+.env.docker
 
 # Go (Gateway & Services)
 /services/**/bin/
