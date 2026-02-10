@@ -10,4 +10,11 @@ export default defineNuxtConfig({
       apiKey: "",
     },
   },
+  nitro: {
+    preset: "cloudflare-module",
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+    },
+  },
 });
