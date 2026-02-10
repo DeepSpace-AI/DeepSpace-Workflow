@@ -49,4 +49,11 @@ export default defineNuxtConfig({
       title: "DeepSpaceWorkflow",
     },
   },
+  nitro: {
+    preset: "cloudflare-module",
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+    },
+  },
 });
