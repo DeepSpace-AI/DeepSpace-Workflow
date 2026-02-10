@@ -1,0 +1,31 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    env_file:
+      - .env.docker
+    ports:
+      - "8080:8080"
+    volumes:
+      - gateway_data:/data
+    networks:
+      - 1panel-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    env_file:
+      - .env.docker
+    networks:
+      - 1panel-network
+
+  # Gateway 仅内网访问。
+
+volumes:
+  gateway_data:
+
+networks:
+  1panel-network:
+    external: true
